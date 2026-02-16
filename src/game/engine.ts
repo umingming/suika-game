@@ -10,7 +10,7 @@ export function createGameEngine(): Matter.Engine {
     gravity: { x: 0, y: 1.5, scale: 0.001 },
   });
 
-  const wallOptions: Matter.IBodyDefinition = {
+  const wallOptions: Matter.IChamferableBodyDefinition = {
     isStatic: true,
     friction: 0.3,
     render: { visible: false },
