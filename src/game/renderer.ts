@@ -1088,29 +1088,36 @@ function drawFruitStages(ctx: CanvasRenderingContext2D): void {
   ctx.stroke();
 
   const count = FRUITS.length; // 11
-  const spacing = GAME_WIDTH / count;
   const centerY = panelY + panelH / 2;
 
+  // Calculate mini sizes for each fruit
+  const sizes = FRUITS.map((_, i) => 10 * Math.pow(1.1, i));
+  const totalDiameters = sizes.reduce((sum, s) => sum + s * 2, 0);
+  const gap = 16;
+  const totalW = totalDiameters + gap * (count - 1);
+  let curX = (GAME_WIDTH - totalW) / 2;
+
   for (let i = 0; i < count; i++) {
-    const cx = spacing * i + spacing / 2;
-    const config = FRUITS[i];
+    const miniSize = sizes[i];
+    const cx = curX + miniSize;
 
     // Arrow between fruits
     if (i > 0) {
       ctx.fillStyle = '#D4A0B0';
-      ctx.font = `12px ${FONT}`;
+      ctx.font = `11px ${FONT}`;
       ctx.textAlign = 'center';
-      ctx.fillText('›', spacing * i, centerY + 2);
+      ctx.fillText('›', curX - gap / 2, centerY + 2);
     }
 
     // Mini fruit — progressively larger
     ctx.save();
-    const miniSize = 10 + i * 1.8;
-    const scale = miniSize / config.radius;
+    const scale = miniSize / FRUITS[i].radius;
     ctx.translate(cx, centerY);
     ctx.scale(scale, scale);
     drawFruit(ctx, 0, 0, i, 0);
     ctx.restore();
+
+    curX += miniSize * 2 + gap;
   }
 }
 

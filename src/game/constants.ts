@@ -1,6 +1,6 @@
 export const GAME_WIDTH = 640;
 export const PLAY_AREA_HEIGHT = 960;
-export const GAME_HEIGHT = 1040;
+export const GAME_HEIGHT = 1035;
 export const WALL_THICKNESS = 20;
 export const DANGER_LINE_Y = 120;
 export const DROP_Y = 80;
