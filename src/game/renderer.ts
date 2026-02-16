@@ -271,21 +271,12 @@ const CHEEK_COLORS: Record<number, string> = {
 
 function drawRoundEye(
   ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number,
+  gazeX = 0, color = '#2A1A1A',
 ): void {
-  // Simple kawaii eye: solid dark circle + big highlights
-  ctx.fillStyle = '#2C2C2C';
+  // Simple bean eye in fruit outline color
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(cx, cy, er, 0, Math.PI * 2);
-  ctx.fill();
-  // Big highlight (top-left)
-  const hlR = Math.max(1.5, er * 0.42);
-  ctx.fillStyle = '#FFF';
-  ctx.beginPath();
-  ctx.arc(cx - er * 0.22, cy - er * 0.25, hlR, 0, Math.PI * 2);
-  ctx.fill();
-  // Small highlight (bottom-right)
-  ctx.beginPath();
-  ctx.arc(cx + er * 0.25, cy + er * 0.2, Math.max(0.7, hlR * 0.3), 0, Math.PI * 2);
+  ctx.arc(cx + gazeX, cy, er * 0.55, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -293,7 +284,7 @@ function drawHappyEye(
   ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number
 ): void {
   ctx.save();
-  ctx.strokeStyle = '#4A4040';
+  ctx.strokeStyle = '#5A4A4A';
   ctx.lineWidth = Math.max(2, er * 0.25);
   ctx.lineCap = 'round';
   ctx.beginPath();
@@ -303,21 +294,17 @@ function drawHappyEye(
 }
 
 function drawStarEye(
-  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number,
+  gazeX = 0,
 ): void {
-  // Soft dark circle
-  ctx.fillStyle = '#2C2C2C';
+  // Simple emoji style: solid black circle + star
+  ctx.fillStyle = '#2A1A1A';
   ctx.beginPath();
-  ctx.arc(cx, cy, er, 0, Math.PI * 2);
+  ctx.arc(cx + gazeX, cy, er, 0, Math.PI * 2);
   ctx.fill();
   // Star sparkle
-  ctx.fillStyle = '#FFE040';
-  drawStar(ctx, cx, cy, er * 0.6, 5);
-  // Highlight
-  ctx.fillStyle = '#FFF';
-  ctx.beginPath();
-  ctx.arc(cx - er * 0.15, cy - er * 0.2, Math.max(1, er * 0.18), 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = '#FFE860';
+  drawStar(ctx, cx + gazeX, cy, er * 0.7, 5);
 }
 
 function drawHeartEye(
@@ -334,44 +321,64 @@ function drawHeartEye(
 }
 
 function drawSleepyEye(
-  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number,
+  color = '#2A1A1A',
 ): void {
   ctx.save();
-  ctx.strokeStyle = '#4A4040';
-  ctx.lineWidth = Math.max(1.5, er * 0.22);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(2, er * 0.35);
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(cx - er * 0.6, cy);
-  ctx.quadraticCurveTo(cx, cy + er * 0.25, cx + er * 0.6, cy);
+  ctx.moveTo(cx - er * 0.85, cy);
+  ctx.quadraticCurveTo(cx, cy + er * 0.4, cx + er * 0.85, cy);
   ctx.stroke();
   ctx.restore();
 }
 
 function drawWinkEye(
-  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number,
+  color = '#2A1A1A',
 ): void {
   ctx.save();
-  ctx.strokeStyle = '#4A4040';
-  ctx.lineWidth = Math.max(1.5, er * 0.22);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(2, er * 0.35);
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(cx - er * 0.4, cy - er * 0.3);
-  ctx.lineTo(cx + er * 0.05, cy + er * 0.05);
-  ctx.lineTo(cx - er * 0.4, cy + er * 0.4);
+  ctx.moveTo(cx - er * 0.6, cy - er * 0.45);
+  ctx.lineTo(cx + er * 0.08, cy + er * 0.05);
+  ctx.lineTo(cx - er * 0.6, cy + er * 0.55);
   ctx.stroke();
   ctx.restore();
 }
 
 function drawLineEye(
-  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number,
+  color = '#2A1A1A',
 ): void {
   ctx.save();
-  ctx.strokeStyle = '#4A4040';
-  ctx.lineWidth = Math.max(2, er * 0.25);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(2.5, er * 0.35);
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(cx - er * 0.5, cy);
-  ctx.lineTo(cx + er * 0.5, cy);
+  ctx.moveTo(cx - er * 0.6, cy);
+  ctx.lineTo(cx + er * 0.6, cy);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawXEye(
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, er: number,
+  direction: '>' | '<' = '>',
+): void {
+  ctx.save();
+  ctx.strokeStyle = '#2A1A1A';
+  ctx.lineWidth = Math.max(2, er * 0.35);
+  ctx.lineCap = 'round';
+  const s = direction === '>' ? 1 : -1;
+  ctx.beginPath();
+  ctx.moveTo(cx - s * er * 0.5, cy - er * 0.5);
+  ctx.lineTo(cx + s * er * 0.3, cy);
+  ctx.lineTo(cx - s * er * 0.5, cy + er * 0.5);
   ctx.stroke();
   ctx.restore();
 }
@@ -397,11 +404,11 @@ function drawCheeks(
   ctx: CanvasRenderingContext2D, r: number, level: number, hasHeartCheek = false
 ): void {
   const cheekColor = CHEEK_COLORS[level] ?? '#FF8FAA';
-  const cheekR = Math.max(5, r * 0.22);
+  const cheekR = Math.max(5, r * 0.24);
   const cheekY = r * 0.18;
 
   ctx.save();
-  ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = 0.6;
 
   for (const side of [-1, 1]) {
     const cx = side * r * 0.38;
@@ -444,7 +451,7 @@ function drawEyebrows(
 ): void {
   if (style === 'none') return;
   ctx.save();
-  ctx.strokeStyle = '#4A4040';
+  ctx.strokeStyle = '#5A4A4A';
   ctx.lineWidth = Math.max(1.5, r * 0.035);
   ctx.lineCap = 'round';
 
@@ -475,19 +482,25 @@ function drawEyebrows(
 
 function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): void {
   ctx.save();
-  const exX = r * 0.25;  // eye X offset (wider)
+  const exX = r * 0.32;  // eye X offset (wider apart)
   const eyY = -r * 0.05; // eye Y offset
-  const er = Math.max(3.5, r * 0.14); // eye radius — balanced size
+  const er = Math.max(3, r * 0.13); // eye radius — small cute bean
   const mouthY = r * 0.25;
   ctx.lineCap = 'round';
+
+  // Gaze: subtle shared eye drift
+  const gazeX = Math.sin(frameTime * 0.0008) * Math.max(0.5, er * 0.1);
+
+  // Mouth breath animation for open mouths
+  const breathScale = 1 + Math.sin(frameTime * 0.003) * 0.02;
 
   switch (level) {
     case 0: {
       // Cherry: surprised — big round eyes + small 'o' mouth
-      drawRoundEye(ctx, -exX, eyY, er);
-      drawRoundEye(ctx, exX, eyY, er);
+      drawRoundEye(ctx, -exX, eyY, er, gazeX);
+      drawRoundEye(ctx, exX, eyY, er, gazeX);
       // 'o' mouth
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.05);
       ctx.beginPath();
       ctx.arc(0, mouthY, r * 0.08, 0, Math.PI * 2);
@@ -496,11 +509,11 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 1: {
-      // Strawberry: sparkly star eyes + ω mouth
-      drawStarEye(ctx, -exX, eyY, er);
-      drawStarEye(ctx, exX, eyY, er);
+      // Strawberry: round eyes + ω mouth
+      drawRoundEye(ctx, -exX, eyY, er, gazeX);
+      drawRoundEye(ctx, exX, eyY, er, gazeX);
       // ω cat mouth
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.045);
       const mw = r * 0.22;
       ctx.beginPath();
@@ -516,7 +529,7 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       drawSleepyEye(ctx, -exX, eyY, er);
       drawSleepyEye(ctx, exX, eyY, er);
       // Tiny relaxed smile
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.04);
       ctx.beginPath();
       ctx.arc(0, mouthY - r * 0.02, r * 0.1, 0.15, Math.PI - 0.15);
@@ -525,11 +538,11 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 3: {
-      // Tangerine: wink + tongue out
-      drawRoundEye(ctx, -exX, eyY, er);
-      drawWinkEye(ctx, exX, eyY, er);
+      // Tangerine: wink (left) + round eye (right) + tongue out
+      drawWinkEye(ctx, -exX, eyY, er);
+      drawRoundEye(ctx, exX, eyY, er, gazeX);
       // Tongue out mouth
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.04);
       const mw = r * 0.15;
       ctx.beginPath();
@@ -548,7 +561,7 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       drawLineEye(ctx, -exX, eyY, er);
       drawLineEye(ctx, exX, eyY, er);
       // Satisfied ω
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.8, r * 0.04);
       const mw = r * 0.2;
       ctx.beginPath();
@@ -560,16 +573,16 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 5: {
-      // Apple: excited — big sparkly eyes + wide open smile
-      drawRoundEye(ctx, -exX, eyY, er);
-      drawRoundEye(ctx, exX, eyY, er);
-      // Big smile with teeth
-      const mw = r * 0.2;
+      // Apple: excited — big round eyes + wide open smile
+      drawRoundEye(ctx, -exX, eyY, er, gazeX);
+      drawRoundEye(ctx, exX, eyY, er, gazeX);
+      // Big smile with teeth (breathing)
+      const mw = r * 0.2 * breathScale;
       ctx.beginPath();
       ctx.arc(0, mouthY, mw, 0, Math.PI);
       ctx.fillStyle = '#D35A5A';
       ctx.fill();
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.035);
       ctx.stroke();
       // Teeth
@@ -584,16 +597,16 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 6: {
-      // Pear: heart eyes + wide smile
-      drawHeartEye(ctx, -exX, eyY, er);
-      drawHeartEye(ctx, exX, eyY, er);
-      // Wide happy smile
-      const mw = r * 0.18;
+      // Pear: round eyes + wide smile
+      drawRoundEye(ctx, -exX, eyY, er, gazeX);
+      drawRoundEye(ctx, exX, eyY, er, gazeX);
+      // Wide happy smile (breathing)
+      const mw = r * 0.18 * breathScale;
       ctx.beginPath();
       ctx.arc(0, mouthY, mw, 0, Math.PI);
       ctx.fillStyle = '#D35A5A';
       ctx.fill();
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.03);
       ctx.stroke();
       // Tongue
@@ -605,16 +618,16 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 7: {
-      // Peach: happy squint + heart cheeks
-      drawHappyEye(ctx, -exX, eyY, er);
-      drawHappyEye(ctx, exX, eyY, er);
-      // Wide grin
-      const mw = r * 0.2;
+      // Peach: round eyes + heart cheeks
+      drawRoundEye(ctx, -exX, eyY, er, gazeX);
+      drawRoundEye(ctx, exX, eyY, er, gazeX);
+      // Wide grin (breathing)
+      const mw = r * 0.2 * breathScale;
       ctx.beginPath();
       ctx.arc(0, mouthY, mw, 0, Math.PI);
       ctx.fillStyle = '#E05070';
       ctx.fill();
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.03);
       ctx.stroke();
       ctx.fillStyle = '#FF8A94';
@@ -625,18 +638,11 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 8: {
-      // Pineapple: sunglasses + cool smirk
-      // Bridge between glasses
-      ctx.strokeStyle = '#2A2A3E';
-      ctx.lineWidth = Math.max(2, r * 0.03);
-      ctx.beginPath();
-      ctx.moveTo(-exX + er * 1.1, eyY);
-      ctx.lineTo(exX - er * 1.1, eyY);
-      ctx.stroke();
-      drawSunglassesEye(ctx, -exX, eyY, er);
-      drawSunglassesEye(ctx, exX, eyY, er);
+      // Pineapple: round eyes + cool smirk
+      drawRoundEye(ctx, -exX, eyY, er, gazeX);
+      drawRoundEye(ctx, exX, eyY, er, gazeX);
       // Cool smirk
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(2, r * 0.04);
       ctx.beginPath();
       ctx.moveTo(-r * 0.12, mouthY);
@@ -646,16 +652,17 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 9: {
-      // Melon: star eyes + wide laugh
-      drawStarEye(ctx, -exX, eyY, er);
-      drawStarEye(ctx, exX, eyY, er);
-      // Big laugh
-      const mw = r * 0.22;
+      // Melon: >< eyes + wide laugh
+      const xEyeR = Math.max(4, r * 0.18);
+      drawXEye(ctx, -exX, eyY, xEyeR, '>');
+      drawXEye(ctx, exX, eyY, xEyeR, '<');
+      // Big laugh (breathing)
+      const mw = r * 0.22 * breathScale;
       ctx.beginPath();
       ctx.arc(0, mouthY, mw, 0, Math.PI);
       ctx.fillStyle = '#D35A5A';
       ctx.fill();
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(1.5, r * 0.03);
       ctx.stroke();
       // Teeth row
@@ -672,36 +679,23 @@ function drawCuteFace(ctx: CanvasRenderingContext2D, r: number, level: number): 
       break;
     }
     case 10: {
-      // Watermelon: king — happy squint + biggest grin
-      drawHappyEye(ctx, -exX, eyY, er);
-      drawHappyEye(ctx, exX, eyY, er);
-      // Crown above
-      ctx.save();
-      ctx.fillStyle = '#FFD700';
-      ctx.strokeStyle = '#DAA520';
-      ctx.lineWidth = Math.max(1.5, r * 0.02);
-      const crownW = r * 0.5;
-      const crownH = r * 0.2;
-      const crownY = eyY - er * 1.5;
+      // Watermelon: big sunglasses + biggest grin
+      const glassR = Math.max(8, r * 0.22);
+      ctx.strokeStyle = '#2A2A3E';
+      ctx.lineWidth = Math.max(2.5, r * 0.03);
       ctx.beginPath();
-      ctx.moveTo(-crownW, crownY);
-      ctx.lineTo(-crownW * 0.6, crownY - crownH * 0.6);
-      ctx.lineTo(-crownW * 0.2, crownY);
-      ctx.lineTo(0, crownY - crownH);
-      ctx.lineTo(crownW * 0.2, crownY);
-      ctx.lineTo(crownW * 0.6, crownY - crownH * 0.6);
-      ctx.lineTo(crownW, crownY);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(-exX + glassR * 1.05, eyY);
+      ctx.lineTo(exX - glassR * 1.05, eyY);
       ctx.stroke();
-      ctx.restore();
-      // Mega grin
-      const mw = r * 0.24;
+      drawSunglassesEye(ctx, -exX, eyY, glassR);
+      drawSunglassesEye(ctx, exX, eyY, glassR);
+      // Mega grin (breathing)
+      const mw = r * 0.24 * breathScale;
       ctx.beginPath();
       ctx.arc(0, mouthY, mw, 0, Math.PI);
       ctx.fillStyle = '#E05070';
       ctx.fill();
-      ctx.strokeStyle = '#4A4040';
+      ctx.strokeStyle = '#5A4A4A';
       ctx.lineWidth = Math.max(2, r * 0.03);
       ctx.stroke();
       ctx.fillStyle = '#FF8A94';
@@ -1259,7 +1253,7 @@ export function renderFrame(
     ctx.arc(sadR * 0.22, -sadR * 0.06, 2.5, 0, Math.PI * 2);
     ctx.fill();
     // Sad mouth (frown)
-    ctx.strokeStyle = '#4A4040';
+    ctx.strokeStyle = '#5A4A4A';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(0, sadR * 0.35, sadR * 0.12, Math.PI + 0.3, -0.3);
