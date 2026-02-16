@@ -168,7 +168,7 @@ export default function GameCanvas() {
     <div
       ref={containerRef}
       className="w-full h-dvh flex items-start justify-center overflow-hidden"
-      style={{ background: '#FFECD2' }}
+      style={{ background: '#0F0F1E' }}
     >
       <canvas
         ref={canvasRef}

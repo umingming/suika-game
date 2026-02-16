@@ -739,75 +739,45 @@ function getBgPatterns(): BgPattern[] {
 // ── Background ──
 
 export function drawBackground(ctx: CanvasRenderingContext2D): void {
-  // Container background
+  // Container background (retro bright gray)
   ctx.fillStyle = COLORS.containerBg;
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-  // Cute background patterns
+  // 8-bit scanline effect
   ctx.save();
   ctx.globalAlpha = 0.05;
-  ctx.fillStyle = '#E8A0B0';
-  for (const p of getBgPatterns()) {
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.rotation);
-    if (p.type === 'heart') {
-      drawHeart(ctx, 0, 0, p.size);
-    } else if (p.type === 'star') {
-      drawStar(ctx, 0, 0, p.size, 4);
-    } else {
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size * 0.6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 1;
+  for (let y = DANGER_LINE_Y; y < PLAY_AREA_HEIGHT; y += 2) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(GAME_WIDTH, y);
+    ctx.stroke();
   }
   ctx.restore();
 
-  // Side walls with soft gradient feel
+  // Side walls (8-bit style - sharp edges)
   const wallW = 8;
   ctx.fillStyle = COLORS.wallColor;
   ctx.fillRect(0, DANGER_LINE_Y, wallW, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
   ctx.fillRect(GAME_WIDTH - wallW, DANGER_LINE_Y, wallW, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
 
-  // Wall highlight stripe
+  // Wall highlight (retro style)
   ctx.fillStyle = COLORS.wallHighlight;
-  ctx.fillRect(2, DANGER_LINE_Y, 2, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
-  ctx.fillRect(GAME_WIDTH - wallW + 4, DANGER_LINE_Y, 2, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
+  ctx.fillRect(0, DANGER_LINE_Y, 2, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
+  ctx.fillRect(GAME_WIDTH - 2, DANGER_LINE_Y, 2, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
 
-  // Floor
+  // Floor (8-bit style)
   ctx.fillStyle = COLORS.floorColor;
   ctx.fillRect(0, PLAY_AREA_HEIGHT - wallW, GAME_WIDTH, wallW);
+
+  // Floor highlight
   ctx.fillStyle = COLORS.wallHighlight;
   ctx.fillRect(0, PLAY_AREA_HEIGHT - wallW, GAME_WIDTH, 2);
 
-  // Rounded corners
-  ctx.fillStyle = COLORS.containerBg;
-  const cornerR = 6;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(wallW, PLAY_AREA_HEIGHT - wallW - cornerR, cornerR, cornerR);
-  ctx.clip();
-  ctx.fillStyle = COLORS.floorColor;
-  ctx.fillRect(wallW, PLAY_AREA_HEIGHT - wallW - cornerR, cornerR, cornerR);
-  ctx.fillStyle = COLORS.containerBg;
-  ctx.beginPath();
-  ctx.arc(wallW + cornerR, PLAY_AREA_HEIGHT - wallW, cornerR, Math.PI, Math.PI * 1.5);
-  ctx.lineTo(wallW, PLAY_AREA_HEIGHT - wallW);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-
-  // Danger line — cute heart pattern
-  ctx.save();
-  ctx.globalAlpha = 0.35;
+  // Danger line — 8-bit style (solid red)
   ctx.fillStyle = COLORS.dangerLine;
-  const heartSpacing = 24;
-  const heartCount = Math.floor((GAME_WIDTH - wallW * 2) / heartSpacing);
-  for (let i = 0; i < heartCount; i++) {
-    drawHeart(ctx, wallW + i * heartSpacing + heartSpacing / 2, DANGER_LINE_Y, 4);
-  }
-  ctx.restore();
+  ctx.fillRect(wallW, DANGER_LINE_Y - 1, GAME_WIDTH - wallW * 2, 3);
 }
 
 // ── Main fruit drawing ──
@@ -921,15 +891,15 @@ export function drawMergeEffects(
     ctx.save();
     ctx.globalAlpha = effect.alpha;
 
-    // Outer ring (thicker, softer)
+    // Outer ring
     ctx.beginPath();
     ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
     ctx.strokeStyle = effect.color;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.stroke();
 
     // Inner glow
-    ctx.globalAlpha = effect.alpha * 0.25;
+    ctx.globalAlpha = effect.alpha * 0.2;
     const glowGrad = ctx.createRadialGradient(
       effect.x, effect.y, 0,
       effect.x, effect.y, effect.radius * 0.7
@@ -941,30 +911,6 @@ export function drawMergeEffects(
     ctx.arc(effect.x, effect.y, effect.radius * 0.7, 0, Math.PI * 2);
     ctx.fill();
 
-    // Sparkle particles (stars & hearts around the ring)
-    ctx.globalAlpha = effect.alpha * 0.8;
-    ctx.fillStyle = effect.color;
-    const particleCount = 6;
-    const progress = 1 - effect.alpha; // 0→1 as effect fades
-    for (let i = 0; i < particleCount; i++) {
-      const baseAngle = (i / particleCount) * Math.PI * 2;
-      const angle = baseAngle + progress * 1.5; // rotate as they fly out
-      const dist = effect.radius * (0.8 + progress * 0.5);
-      const px = effect.x + Math.cos(angle) * dist;
-      const py = effect.y + Math.sin(angle) * dist;
-      const pSize = Math.max(2, 5 * effect.alpha);
-
-      ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(angle);
-      if (i % 2 === 0) {
-        drawStar(ctx, 0, 0, pSize, 4);
-      } else {
-        drawHeart(ctx, 0, -pSize * 0.3, pSize);
-      }
-      ctx.restore();
-    }
-
     ctx.restore();
   }
 }
@@ -974,29 +920,26 @@ export function drawMergeEffects(
 function drawCuteBox(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number,
-  radius = 14
+  radius = 0
 ): void {
-  // Shadow
-  ctx.save();
-  ctx.fillStyle = 'rgba(200, 150, 130, 0.15)';
-  ctx.beginPath();
-  ctx.roundRect(x + 2, y + 2, w, h, radius);
-  ctx.fill();
-  ctx.restore();
+  // Background (retro bright)
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(x, y, w, h);
 
-  // Background gradient
-  const boxGrad = ctx.createLinearGradient(x, y, x, y + h);
-  boxGrad.addColorStop(0, 'rgba(255, 240, 245, 0.92)');
-  boxGrad.addColorStop(1, 'rgba(255, 230, 235, 0.92)');
-  ctx.fillStyle = boxGrad;
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, radius);
-  ctx.fill();
-
-  // Border
-  ctx.strokeStyle = COLORS.wallColor;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  // Border (retro pixel style - thick black)
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  
+  // Inner highlight (retro 3D effect)
+  ctx.fillStyle = '#C0C0C0';
+  ctx.fillRect(x + 2, y + 2, w - 4, 2);
+  ctx.fillRect(x + 2, y + 2, 2, h - 4);
+  
+  // Inner shadow
+  ctx.fillStyle = '#808080';
+  ctx.fillRect(x + w - 4, y + 2, 2, h - 4);
+  ctx.fillRect(x + 2, y + h - 4, w - 4, 2);
 }
 
 // ── Next fruit preview ──
@@ -1011,11 +954,11 @@ export function drawNextFruitPreview(
   ctx.save();
   drawCuteBox(ctx, GAME_WIDTH - 82, 8, 74, 74);
 
-  // Label
-  ctx.fillStyle = '#D4849A';
-  ctx.font = `11px ${FONT}`;
+  // Label (retro style)
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold 10px ${FONT}`;
   ctx.textAlign = 'center';
-  ctx.fillText('NEXT \u2665', GAME_WIDTH - 45, 24);
+  ctx.fillText('NEXT', GAME_WIDTH - 45, 22);
 
   // Mini fruit
   const scale = Math.min(1, 22 / config.radius);
@@ -1046,15 +989,11 @@ function drawDangerWarning(
   if (minY < dangerZone && minY > 0) {
     const intensity = 1 - (minY / dangerZone);
     const pulse = (Math.sin(time * 0.008) + 1) * 0.5;
-    const alpha = intensity * 0.15 * pulse;
+    const alpha = intensity * 0.1 * pulse;
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    // Red gradient from edges
-    const grad = ctx.createLinearGradient(0, 0, 0, DANGER_LINE_Y + 100);
-    grad.addColorStop(0, '#FF4444');
-    grad.addColorStop(1, 'transparent');
-    ctx.fillStyle = grad;
+    ctx.fillStyle = '#FF0000';
     ctx.fillRect(0, 0, GAME_WIDTH, DANGER_LINE_Y + 100);
     ctx.restore();
   }
@@ -1066,20 +1005,30 @@ function drawFruitStages(ctx: CanvasRenderingContext2D): void {
   const panelY = PLAY_AREA_HEIGHT;
   const panelH = GAME_HEIGHT - PLAY_AREA_HEIGHT;
 
-  // Panel background
-  const panelGrad = ctx.createLinearGradient(0, panelY, 0, panelY + panelH);
-  panelGrad.addColorStop(0, '#FFF0E8');
-  panelGrad.addColorStop(1, '#FFE8D8');
-  ctx.fillStyle = panelGrad;
+  // Panel background (retro dark)
+  ctx.fillStyle = '#1A1A2E';
   ctx.fillRect(0, panelY, GAME_WIDTH, panelH);
 
-  // Top border line
-  ctx.strokeStyle = '#E8C4B0';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(0, panelY);
-  ctx.lineTo(GAME_WIDTH, panelY);
-  ctx.stroke();
+  // Retro scanline effect
+  ctx.save();
+  ctx.globalAlpha = 0.1;
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 1;
+  for (let y = panelY; y < GAME_HEIGHT; y += 2) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(GAME_WIDTH, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Top border line (retro style)
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, panelY, GAME_WIDTH, 2);
+  
+  // Highlight line
+  ctx.fillStyle = '#404040';
+  ctx.fillRect(0, panelY + 2, GAME_WIDTH, 1);
 
   const count = FRUITS.length; // 11
   const centerY = panelY + panelH / 2;
@@ -1087,21 +1036,13 @@ function drawFruitStages(ctx: CanvasRenderingContext2D): void {
   // Calculate mini sizes for each fruit
   const sizes = FRUITS.map((_, i) => 10 * Math.pow(1.1, i));
   const totalDiameters = sizes.reduce((sum, s) => sum + s * 2, 0);
-  const gap = 16;
+  const gap = 20;
   const totalW = totalDiameters + gap * (count - 1);
   let curX = (GAME_WIDTH - totalW) / 2;
 
   for (let i = 0; i < count; i++) {
     const miniSize = sizes[i];
     const cx = curX + miniSize;
-
-    // Arrow between fruits
-    if (i > 0) {
-      ctx.fillStyle = '#D4A0B0';
-      ctx.font = `11px ${FONT}`;
-      ctx.textAlign = 'center';
-      ctx.fillText('›', curX - gap / 2, centerY + 2);
-    }
 
     // Mini fruit — progressively larger
     ctx.save();
@@ -1174,110 +1115,63 @@ export function renderFrame(
   ctx.save();
   drawCuteBox(ctx, 8, 8, 125, 74);
 
-  ctx.fillStyle = '#D4849A';
-  ctx.font = `11px ${FONT}`;
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold 10px ${FONT}`;
   ctx.textAlign = 'left';
-  ctx.fillText('\u2605 SCORE \u2605', 20, 24);
+  ctx.fillText('SCORE', 20, 22);
 
-  ctx.fillStyle = '#5A3040';
-  ctx.font = `bold 24px ${FONT}`;
-  ctx.fillText(`${score}`, 20, 50);
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold 22px ${FONT}`;
+  ctx.fillText(`${score}`, 20, 48);
 
-  ctx.fillStyle = '#C4A0AA';
-  ctx.font = `11px ${FONT}`;
-  ctx.fillText(`BEST: ${highScore}`, 20, 68);
+  ctx.fillStyle = '#404040';
+  ctx.font = `10px ${FONT}`;
+  ctx.fillText(`BEST: ${highScore}`, 20, 66);
   ctx.restore();
 
   // Game over overlay
   if (isGameOver) {
     ctx.save();
-    // Soft purple/pink overlay
-    ctx.fillStyle = 'rgba(80, 40, 60, 0.45)';
+    // Overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fillRect(0, 0, GAME_WIDTH, PLAY_AREA_HEIGHT);
 
-    // Cute box
+    // Box
     const boxX = GAME_WIDTH / 2 - 165;
     const boxY = PLAY_AREA_HEIGHT / 2 - 100;
     const boxW = 330;
     const boxH = 220;
 
-    // Box shadow
-    ctx.fillStyle = 'rgba(100, 50, 70, 0.2)';
-    ctx.beginPath();
-    ctx.roundRect(boxX + 4, boxY + 4, boxW, boxH, 24);
-    ctx.fill();
+    // Box bg (retro style - sharp corners)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    
+    // Inner highlight (retro 3D effect)
+    ctx.fillStyle = '#C0C0C0';
+    ctx.fillRect(boxX + 3, boxY + 3, boxW - 6, 4);
+    ctx.fillRect(boxX + 3, boxY + 3, 4, boxH - 6);
+    
+    // Inner shadow
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(boxX + boxW - 7, boxY + 3, 4, boxH - 6);
+    ctx.fillRect(boxX + 3, boxY + boxH - 7, boxW - 6, 4);
 
-    // Box bg
-    const goGrad = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxH);
-    goGrad.addColorStop(0, 'rgba(255, 245, 250, 0.95)');
-    goGrad.addColorStop(1, 'rgba(255, 230, 240, 0.95)');
-    ctx.fillStyle = goGrad;
-    ctx.beginPath();
-    ctx.roundRect(boxX, boxY, boxW, boxH, 24);
-    ctx.fill();
-    ctx.strokeStyle = '#E8B4C0';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Decorative hearts around box
-    ctx.globalAlpha = 0.15;
-    ctx.fillStyle = '#FF8FAA';
-    const heartPositions = [
-      [boxX + 20, boxY + 15], [boxX + boxW - 20, boxY + 15],
-      [boxX + 15, boxY + boxH - 15], [boxX + boxW - 15, boxY + boxH - 15],
-    ];
-    for (const [hx, hy] of heartPositions) {
-      drawHeart(ctx, hx, hy, 8);
-    }
-    ctx.globalAlpha = 1;
-
-    // Sad fruit at top
-    ctx.save();
-    ctx.translate(GAME_WIDTH / 2, boxY + 50);
-    ctx.scale(0.35, 0.35);
-    // Draw a small cherry with sad face manually
-    const sadR = 17;
-    const sadGrad = ctx.createRadialGradient(-sadR * 0.25, -sadR * 0.25, sadR * 0.1, 0, 0, sadR);
-    sadGrad.addColorStop(0, '#FF6B7A');
-    sadGrad.addColorStop(1, '#E84057');
-    ctx.beginPath();
-    ctx.arc(0, 0, sadR, 0, Math.PI * 2);
-    ctx.fillStyle = sadGrad;
-    ctx.fill();
-    // Sad eyes
-    ctx.fillStyle = '#2A1810';
-    ctx.beginPath();
-    ctx.arc(-sadR * 0.22, -sadR * 0.06, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(sadR * 0.22, -sadR * 0.06, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    // Sad mouth (frown)
-    ctx.strokeStyle = '#5A4A4A';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(0, sadR * 0.35, sadR * 0.12, Math.PI + 0.3, -0.3);
-    ctx.stroke();
-    // Tear drop
-    ctx.fillStyle = 'rgba(100, 180, 255, 0.5)';
-    ctx.beginPath();
-    ctx.ellipse(sadR * 0.3, sadR * 0.15, 1.5, 2.5, 0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // Text
-    ctx.fillStyle = '#D4506A';
-    ctx.font = `bold 34px ${FONT}`;
+    // Text (retro style)
+    ctx.fillStyle = '#000000';
+    ctx.font = `bold 32px ${FONT}`;
     ctx.textAlign = 'center';
-    ctx.fillText('\uAC8C\uC784 \uC624\uBC84!', GAME_WIDTH / 2, boxY + 110);
+    ctx.fillText('게임 오버', GAME_WIDTH / 2, boxY + 100);
 
-    ctx.fillStyle = '#7A4050';
-    ctx.font = `22px ${FONT}`;
-    ctx.fillText(`\uC810\uC218: ${score}`, GAME_WIDTH / 2, boxY + 145);
+    ctx.fillStyle = '#000000';
+    ctx.font = `bold 20px ${FONT}`;
+    ctx.fillText(`점수: ${score}`, GAME_WIDTH / 2, boxY + 140);
 
-    ctx.fillStyle = '#C08090';
-    ctx.font = `16px ${FONT}`;
-    ctx.fillText('\uB2E4\uC2DC \uD558\uAE30 \u2665', GAME_WIDTH / 2, boxY + 185);
+    ctx.fillStyle = '#404040';
+    ctx.font = `14px ${FONT}`;
+    ctx.fillText('다시 하기', GAME_WIDTH / 2, boxY + 180);
 
     ctx.restore();
   }

@@ -14,10 +14,10 @@ export const PHYSICS = {
 };
 
 export const COLORS = {
-  background: '#FFECD2',
-  wallColor: '#E8B4A0',
-  wallHighlight: '#F0C8B8',
-  dangerLine: '#FF9999',
-  containerBg: '#FFF8F0',
-  floorColor: '#D4A08A',
+  background: '#1A1A2E',
+  wallColor: '#6A6A8A',
+  wallHighlight: '#8A8AAA',
+  dangerLine: '#FF0000',
+  containerBg: '#E0E0E0',
+  floorColor: '#6A6A8A',
 };
