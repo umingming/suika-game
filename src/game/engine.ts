@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { GAME_WIDTH, GAME_HEIGHT, WALL_THICKNESS, PHYSICS } from './constants';
+import { GAME_WIDTH, PLAY_AREA_HEIGHT, WALL_THICKNESS, PHYSICS } from './constants';
 import { FRUITS } from './fruits';
 import type { FruitBody } from '@/types/game';
 
@@ -18,23 +18,23 @@ export function createGameEngine(): Matter.Engine {
 
   const leftWall = Bodies.rectangle(
     -WALL_THICKNESS / 2,
-    GAME_HEIGHT / 2,
+    PLAY_AREA_HEIGHT / 2,
     WALL_THICKNESS,
-    GAME_HEIGHT,
+    PLAY_AREA_HEIGHT,
     wallOptions
   );
 
   const rightWall = Bodies.rectangle(
     GAME_WIDTH + WALL_THICKNESS / 2,
-    GAME_HEIGHT / 2,
+    PLAY_AREA_HEIGHT / 2,
     WALL_THICKNESS,
-    GAME_HEIGHT,
+    PLAY_AREA_HEIGHT,
     wallOptions
   );
 
   const floor = Bodies.rectangle(
     GAME_WIDTH / 2,
-    GAME_HEIGHT + WALL_THICKNESS / 2,
+    PLAY_AREA_HEIGHT + WALL_THICKNESS / 2,
     GAME_WIDTH + WALL_THICKNESS * 2,
     WALL_THICKNESS,
     wallOptions

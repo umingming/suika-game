@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { GAME_WIDTH, GAME_HEIGHT, DANGER_LINE_Y, COLORS } from './constants';
+import { GAME_WIDTH, GAME_HEIGHT, PLAY_AREA_HEIGHT, DANGER_LINE_Y, COLORS } from './constants';
 import { FRUITS } from './fruits';
 import type { FruitBody, MergeEffect, DecoType } from '@/types/game';
 
@@ -773,33 +773,33 @@ export function drawBackground(ctx: CanvasRenderingContext2D): void {
   // Side walls with soft gradient feel
   const wallW = 8;
   ctx.fillStyle = COLORS.wallColor;
-  ctx.fillRect(0, DANGER_LINE_Y, wallW, GAME_HEIGHT - DANGER_LINE_Y);
-  ctx.fillRect(GAME_WIDTH - wallW, DANGER_LINE_Y, wallW, GAME_HEIGHT - DANGER_LINE_Y);
+  ctx.fillRect(0, DANGER_LINE_Y, wallW, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
+  ctx.fillRect(GAME_WIDTH - wallW, DANGER_LINE_Y, wallW, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
 
   // Wall highlight stripe
   ctx.fillStyle = COLORS.wallHighlight;
-  ctx.fillRect(2, DANGER_LINE_Y, 2, GAME_HEIGHT - DANGER_LINE_Y);
-  ctx.fillRect(GAME_WIDTH - wallW + 4, DANGER_LINE_Y, 2, GAME_HEIGHT - DANGER_LINE_Y);
+  ctx.fillRect(2, DANGER_LINE_Y, 2, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
+  ctx.fillRect(GAME_WIDTH - wallW + 4, DANGER_LINE_Y, 2, PLAY_AREA_HEIGHT - DANGER_LINE_Y);
 
   // Floor
   ctx.fillStyle = COLORS.floorColor;
-  ctx.fillRect(0, GAME_HEIGHT - wallW, GAME_WIDTH, wallW);
+  ctx.fillRect(0, PLAY_AREA_HEIGHT - wallW, GAME_WIDTH, wallW);
   ctx.fillStyle = COLORS.wallHighlight;
-  ctx.fillRect(0, GAME_HEIGHT - wallW, GAME_WIDTH, 2);
+  ctx.fillRect(0, PLAY_AREA_HEIGHT - wallW, GAME_WIDTH, 2);
 
   // Rounded corners
   ctx.fillStyle = COLORS.containerBg;
   const cornerR = 6;
   ctx.save();
   ctx.beginPath();
-  ctx.rect(wallW, GAME_HEIGHT - wallW - cornerR, cornerR, cornerR);
+  ctx.rect(wallW, PLAY_AREA_HEIGHT - wallW - cornerR, cornerR, cornerR);
   ctx.clip();
   ctx.fillStyle = COLORS.floorColor;
-  ctx.fillRect(wallW, GAME_HEIGHT - wallW - cornerR, cornerR, cornerR);
+  ctx.fillRect(wallW, PLAY_AREA_HEIGHT - wallW - cornerR, cornerR, cornerR);
   ctx.fillStyle = COLORS.containerBg;
   ctx.beginPath();
-  ctx.arc(wallW + cornerR, GAME_HEIGHT - wallW, cornerR, Math.PI, Math.PI * 1.5);
-  ctx.lineTo(wallW, GAME_HEIGHT - wallW);
+  ctx.arc(wallW + cornerR, PLAY_AREA_HEIGHT - wallW, cornerR, Math.PI, Math.PI * 1.5);
+  ctx.lineTo(wallW, PLAY_AREA_HEIGHT - wallW);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
@@ -908,7 +908,7 @@ export function drawDropPreview(
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(x, y + config.radius);
-  ctx.lineTo(x, GAME_HEIGHT - 8);
+  ctx.lineTo(x, PLAY_AREA_HEIGHT - 8);
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
@@ -1039,7 +1039,7 @@ function drawDangerWarning(
   time: number
 ): void {
   const bodies = Matter.Composite.allBodies(engine.world);
-  let minY = GAME_HEIGHT;
+  let minY = PLAY_AREA_HEIGHT;
   for (const body of bodies) {
     if (body.isStatic) continue;
     const fb = body as FruitBody;
@@ -1062,6 +1062,54 @@ function drawDangerWarning(
     grad.addColorStop(1, 'transparent');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, GAME_WIDTH, DANGER_LINE_Y + 100);
+    ctx.restore();
+  }
+}
+
+// ── Fruit stages indicator ──
+
+function drawFruitStages(ctx: CanvasRenderingContext2D): void {
+  const panelY = PLAY_AREA_HEIGHT;
+  const panelH = GAME_HEIGHT - PLAY_AREA_HEIGHT;
+
+  // Panel background
+  const panelGrad = ctx.createLinearGradient(0, panelY, 0, panelY + panelH);
+  panelGrad.addColorStop(0, '#FFF0E8');
+  panelGrad.addColorStop(1, '#FFE8D8');
+  ctx.fillStyle = panelGrad;
+  ctx.fillRect(0, panelY, GAME_WIDTH, panelH);
+
+  // Top border line
+  ctx.strokeStyle = '#E8C4B0';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, panelY);
+  ctx.lineTo(GAME_WIDTH, panelY);
+  ctx.stroke();
+
+  const count = FRUITS.length; // 11
+  const spacing = GAME_WIDTH / count;
+  const centerY = panelY + panelH / 2;
+
+  for (let i = 0; i < count; i++) {
+    const cx = spacing * i + spacing / 2;
+    const config = FRUITS[i];
+
+    // Arrow between fruits
+    if (i > 0) {
+      ctx.fillStyle = '#D4A0B0';
+      ctx.font = `12px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillText('›', spacing * i, centerY + 2);
+    }
+
+    // Mini fruit — progressively larger
+    ctx.save();
+    const miniSize = 10 + i * 1.8;
+    const scale = miniSize / config.radius;
+    ctx.translate(cx, centerY);
+    ctx.scale(scale, scale);
+    drawFruit(ctx, 0, 0, i, 0);
     ctx.restore();
   }
 }
@@ -1118,6 +1166,9 @@ export function renderFrame(
   // Next fruit preview
   drawNextFruitPreview(ctx, nextFruitLevel);
 
+  // Fruit stages indicator
+  drawFruitStages(ctx);
+
   // Score box
   ctx.save();
   drawCuteBox(ctx, 8, 8, 125, 74);
@@ -1141,11 +1192,11 @@ export function renderFrame(
     ctx.save();
     // Soft purple/pink overlay
     ctx.fillStyle = 'rgba(80, 40, 60, 0.45)';
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    ctx.fillRect(0, 0, GAME_WIDTH, PLAY_AREA_HEIGHT);
 
     // Cute box
     const boxX = GAME_WIDTH / 2 - 165;
-    const boxY = GAME_HEIGHT / 2 - 100;
+    const boxY = PLAY_AREA_HEIGHT / 2 - 100;
     const boxW = 330;
     const boxH = 220;
 
