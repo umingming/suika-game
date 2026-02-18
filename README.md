@@ -1,8 +1,12 @@
 # 🍉 수박게임 (Suika Game)
 
-> 과일을 합쳐서 수박을 만들어보세요!
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Matter.js](https://img.shields.io/badge/Matter.js-0.20-yellow)](https://brm.io/matter-js/)
 
-물리 엔진 기반의 반응형 웹 수박게임입니다. 같은 과일끼리 부딪히면 더 큰 과일로 합쳐지며, 최종 목표는 수박을 만드는 것입니다.
+> 과일을 합쳐서 수박을 만들어보세요! 🍒→🍓→🍇→🍊→🍎→🍐→🍑→🍍→🍈→🍉
+
+물리 엔진 기반의 반응형 웹 수박게임입니다. 같은 과일끼리 부딪히면 더 큰 과일로 합쳐지며, 최종 목표는 수박을 만드는 것입니다. PC와 모바일 모두 지원합니다.
 
 ## 🎮 게임 규칙
 
