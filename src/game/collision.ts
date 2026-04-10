@@ -19,8 +19,10 @@ export function setupCollisionHandler(
   let gameOverCheckTimeout: ReturnType<typeof setTimeout> | null = null;
   // Track how long each fruit has been continuously above the danger line
   const dangerTimers = new Map<number, number>();
-  // Fruit must stay above danger line for this many consecutive checks (3 seconds)
-  const DANGER_THRESHOLD = 3;
+  // Completely outside: game over after 2 consecutive checks (2 seconds)
+  const FULL_OUT_THRESHOLD = 2;
+  // Partially above: game over after 3 consecutive checks (3 seconds)
+  const PARTIAL_THRESHOLD = 3;
 
   const handler = (event: Matter.IEventCollision<Matter.Engine>) => {
     const pairs = event.pairs;
@@ -88,19 +90,33 @@ export function setupCollisionHandler(
 
       activeFruitIds.add(fb.id);
 
-      // Check if fruit top is above danger line and has settled
+      const radius = FRUITS[fb.fruitLevel].radius;
+      const fruitBottom = fb.position.y + radius;
+      const fruitTop = fb.position.y - radius;
       const speed = Math.sqrt(fb.velocity.x ** 2 + fb.velocity.y ** 2);
-      if (fb.position.y - FRUITS[fb.fruitLevel].radius < DANGER_LINE_Y && speed < 2) {
-        const count = (dangerTimers.get(fb.id) ?? 0) + 1;
-        dangerTimers.set(fb.id, count);
 
-        // Only trigger game over if fruit has been above the line for sustained period
-        if (count >= DANGER_THRESHOLD) {
-          callbacks.onGameOver();
-          return;
+      if (speed < 2) {
+        if (fruitBottom < DANGER_LINE_Y) {
+          // Entire fruit is above the line — shorter tolerance
+          const count = (dangerTimers.get(fb.id) ?? 0) + 1;
+          dangerTimers.set(fb.id, count);
+          if (count >= FULL_OUT_THRESHOLD) {
+            callbacks.onGameOver();
+            return;
+          }
+        } else if (fruitTop < DANGER_LINE_Y) {
+          // Partially above the line — longer tolerance
+          const count = (dangerTimers.get(fb.id) ?? 0) + 1;
+          dangerTimers.set(fb.id, count);
+          if (count >= PARTIAL_THRESHOLD) {
+            callbacks.onGameOver();
+            return;
+          }
+        } else {
+          dangerTimers.delete(fb.id);
         }
       } else {
-        // Fruit moved below line or is still moving fast — reset its timer
+        // Still moving fast — reset timer
         dangerTimers.delete(fb.id);
       }
     }
