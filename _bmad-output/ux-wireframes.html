@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수이카 게임 — UX 와이어프레임</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Courier New', monospace;
+    background: #0d0d1a;
+    color: #c0c0d0;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+
+  /* ── 문서 헤더 ── */
+  .doc-header {
+    max-width: 1200px;
+    margin: 0 auto 60px;
+    border-bottom: 2px solid #3a3a6a;
+    padding-bottom: 24px;
+  }
+  .doc-header h1 {
+    font-size: 28px;
+    color: #f0e040;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .doc-header .meta {
+    font-size: 12px;
+    color: #606090;
+    display: flex;
+    gap: 32px;
+  }
+  .doc-header .meta span { color: #9090c0; }
+
+  /* ── 섹션 ── */
+  .section {
+    max-width: 1200px;
+    margin: 0 auto 80px;
+  }
+  .section-title {
+    font-size: 13px;
+    color: #7070a0;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2a2a4a;
+  }
+  .section-num {
+    background: #3a3a6a;
+    color: #a0a0d0;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    border-radius: 2px;
+  }
+
+  /* ── 화면 그리드 ── */
+  .screen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+  .screen-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .screen-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .screen-grid.cols-1 { grid-template-columns: 1fr; }
+
+  /* ── 와이어프레임 카드 ── */
+  .wf-card {
+    background: #13132a;
+    border: 1px solid #2a2a5a;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .wf-label {
+    background: #1e1e40;
+    padding: 8px 14px;
+    font-size: 11px;
+    color: #7070c0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #2a2a5a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .wf-label .badge {
+    background: #3a3a6a;
+    color: #9090d0;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .wf-label .badge.new {
+    background: #1a4a2a;
+    color: #40d080;
+    border: 1px solid #40d080;
+  }
+  .wf-label .badge.current {
+    background: #4a3a1a;
+    color: #d0a040;
+    border: 1px solid #d0a040;
+  }
+  .wf-body { padding: 20px; }
+
+  /* ── 와이어프레임 박스 컴포넌트 ── */
+  .wf-screen {
+    border: 2px solid #3a3a6a;
+    border-radius: 3px;
+    background: #0a0a18;
+    position: relative;
+    overflow: hidden;
+  }
+  .wf-screen.mobile {
+    width: 200px;
+    margin: 0 auto;
+    border-radius: 16px;
+    border-width: 3px;
+  }
+  .wf-screen.mobile::before {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 6px;
+    background: #2a2a5a;
+    border-radius: 3px;
+    margin: 10px auto 0;
+  }
+
+  /* UI 요소들 */
+  .wf-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .wf-box {
+    background: #1e1e40;
+    border: 1px dashed #4a4a7a;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #6060a0;
+    text-align: center;
+    padding: 4px 6px;
+  }
+  .wf-box.solid {
+    background: #2a2a50;
+    border-style: solid;
+    border-color: #5a5a9a;
+    color: #a0a0d0;
+  }
+  .wf-box.accent {
+    background: #2a1a00;
+    border-color: #d0a040;
+    border-style: solid;
+    color: #f0c040;
+  }
+  .wf-box.primary {
+    background: #001a2a;
+    border-color: #40a0d0;
+    border-style: solid;
+    color: #80d0ff;
+  }
+  .wf-box.danger {
+    background: #2a0000;
+    border-color: #d04040;
+    border-style: solid;
+    color: #ff8080;
+  }
+  .wf-box.success {
+    background: #002a0a;
+    border-color: #40d080;
+    border-style: solid;
+    color: #80ffa0;
+  }
+  .wf-box.ghost {
+    background: transparent;
+    border-color: #3a3a6a;
+    border-style: dashed;
+    color: #4a4a7a;
+  }
+
+  .wf-divider {
+    height: 1px;
+    background: #2a2a4a;
+    margin: 8px 0;
+  }
+  .wf-divider.danger-line {
+    background: #d04040;
+    height: 2px;
+    position: relative;
+  }
+  .wf-divider.danger-line::after {
+    content: '— DANGER LINE —';
+    position: absolute;
+    right: 4px;
+    top: -9px;
+    font-size: 8px;
+    color: #d04040;
+  }
+
+  .wf-canvas-area {
+    background: #0d0d20;
+    border: 1px solid #2a2a5a;
+    border-radius: 2px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .wf-fruit-circle {
+    border-radius: 50%;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .wf-annotation {
+    font-size: 10px;
+    color: #5a8a5a;
+    border-left: 2px solid #3a6a3a;
+    padding-left: 8px;
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+  .wf-annotation.warn {
+    color: #8a7a3a;
+    border-left-color: #6a6a3a;
+  }
+
+  /* ── 흐름도 ── */
+  .flow-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .flow-node {
+    background: #1e1e40;
+    border: 1px solid #4a4a7a;
+    border-radius: 3px;
+    padding: 8px 14px;
+    font-size: 11px;
+    color: #a0a0d0;
+    white-space: nowrap;
+  }
+  .flow-node.start {
+    background: #0a2a0a;
+    border-color: #40d080;
+    color: #80ff80;
+  }
+  .flow-node.end {
+    background: #2a0a0a;
+    border-color: #d04040;
+    color: #ff8080;
+  }
+  .flow-node.action {
+    background: #001a2a;
+    border-color: #4080c0;
+    color: #80c0ff;
+  }
+  .flow-node.decision {
+    background: #1a1a00;
+    border-color: #c0c040;
+    color: #ffff80;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    padding: 14px 20px;
+    text-align: center;
+  }
+  .flow-arrow {
+    color: #4a4a7a;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* ── 노트 박스 ── */
+  .note-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .note-box {
+    background: #13132a;
+    border: 1px solid #2a2a5a;
+    border-radius: 3px;
+    padding: 14px;
+  }
+  .note-box h4 {
+    font-size: 11px;
+    color: #7070d0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .note-box ul {
+    list-style: none;
+    font-size: 11px;
+    color: #8080a0;
+    line-height: 2;
+  }
+  .note-box ul li::before { content: '▸ '; color: #5050a0; }
+  .note-box.highlight { border-color: #d0a040; background: #1a140a; }
+  .note-box.highlight h4 { color: #d0a040; }
+
+  /* ── 컴포넌트 스펙 테이블 ── */
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 16px;
+  }
+  .spec-table th {
+    background: #1e1e40;
+    color: #7070c0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #2a2a5a;
+  }
+  .spec-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #1a1a3a;
+    color: #9090b0;
+    vertical-align: top;
+  }
+  .spec-table tr:hover td { background: #16163a; }
+  .tag {
+    display: inline-block;
+    background: #2a2a50;
+    color: #8080c0;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin: 1px;
+  }
+  .tag.new { background: #0a2a0a; color: #40d080; }
+  .tag.fix { background: #2a1a00; color: #d0a040; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     문서 헤더
+══════════════════════════════════════════════════════ -->
+<div class="doc-header">
+  <h1>수이카 게임 UX 와이어프레임</h1>
+  <div class="meta">
+    <div>작성일: <span>2026-04-10</span></div>
+    <div>버전: <span>v1.0</span></div>
+    <div>디자이너: <span>Sally (UX)</span></div>
+    <div>프로젝트: <span>suika-game / Next.js + Matter.js</span></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     1. 화면 흐름도
+══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="section-num">1</span> 화면 흐름도 (User Flow)</div>
+
+  <div class="wf-card">
+    <div class="wf-label">현재 흐름 vs. 제안 흐름</div>
+    <div class="wf-body">
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;color:#7070a0;margin-bottom:10px;letter-spacing:1px">▌ 현재 (AS-IS)</div>
+        <div class="flow-container">
+          <div class="flow-node start">앱 진입</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">Loading...</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node action">게임 화면</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node end">게임오버 오버레이</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node action">클릭으로 재시작</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;color:#40d080;margin-bottom:10px;letter-spacing:1px">▌ 제안 (TO-BE)</div>
+        <div class="flow-container">
+          <div class="flow-node start">앱 진입</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node action">타이틀 화면</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node action">게임 화면</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node end">게임오버 화면</div>
+        </div>
+        <div class="flow-container" style="margin-left:120px;margin-top:4px">
+          <div class="flow-arrow" style="transform:rotate(90deg)">→</div>
+          <div style="font-size:10px;color:#5a5a9a;margin-left:4px">설정 / 과일 도감</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     2. 화면 1: 타이틀 화면 (신규 제안)
+══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="section-num">2</span> 타이틀 화면 — 신규 제안</div>
+
+  <div class="screen-grid cols-2">
+
+    <!-- 모바일 -->
+    <div class="wf-card">
+      <div class="wf-label">타이틀 화면 (모바일 360px) <span class="badge new">NEW</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:20px;min-height:480px">
+
+          <!-- 배경 별 힌트 -->
+          <div style="position:absolute;top:20px;right:20px;font-size:9px;color:#2a2a5a">✦ ✦ ✦</div>
+          <div style="position:absolute;top:40px;left:14px;font-size:9px;color:#2a2a5a">✦</div>
+
+          <!-- 로고 -->
+          <div class="wf-box solid" style="width:100%;height:80px;margin-bottom:24px;font-size:18px;letter-spacing:3px;color:#f0e040;border-color:#f0e040;background:#1a1800">
+            ▶ 수이카 게임
+          </div>
+
+          <!-- 과일 미리보기 줄 -->
+          <div class="wf-row" style="justify-content:center;gap:6px;margin-bottom:24px">
+            <div class="wf-fruit-circle" style="width:20px;height:20px;border-color:#FF3855;background:#2a0a10;font-size:7px;color:#FF3855">체</div>
+            <div class="wf-fruit-circle" style="width:24px;height:24px;border-color:#FF5278;background:#2a0a14;font-size:7px;color:#FF5278">딸</div>
+            <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#B44DE8;background:#180a2a;font-size:7px;color:#B44DE8">포</div>
+            <div class="wf-fruit-circle" style="width:32px;height:32px;border-color:#FFB020;background:#2a1800;font-size:7px;color:#FFB020">데</div>
+            <div class="wf-fruit-circle" style="width:36px;height:36px;border-color:#FF8830;background:#2a1200;font-size:7px;color:#FF8830">감</div>
+            <div class="wf-fruit-circle" style="width:40px;height:40px;border-color:#30C860;background:#002a10;font-size:7px;color:#30C860">수</div>
+          </div>
+
+          <!-- 최고점 -->
+          <div class="wf-box accent" style="width:100%;margin-bottom:8px;font-size:11px;padding:8px">
+            🏆 최고 점수: 1,234
+          </div>
+
+          <!-- 시작 버튼 -->
+          <div class="wf-box primary" style="width:100%;margin-bottom:8px;font-size:13px;padding:12px;cursor:pointer">
+            ▶ 게임 시작
+          </div>
+
+          <!-- 보조 버튼들 -->
+          <div class="wf-row" style="gap:8px">
+            <div class="wf-box solid" style="flex:1;font-size:10px;padding:8px">📖 과일 도감</div>
+            <div class="wf-box solid" style="flex:1;font-size:10px;padding:8px">⚙ 설정</div>
+          </div>
+
+          <!-- 버전 -->
+          <div style="font-size:9px;color:#2a2a5a;text-align:center;margin-top:16px">v1.0.0</div>
+        </div>
+
+        <div class="wf-annotation">
+          타이틀에서 유저는 게임 세계관을 느낍니다.<br>
+          최고 점수를 바로 보여줌 → 도전 욕구 자극.<br>
+          과일 크기 스케일로 진행감을 암시.
+        </div>
+      </div>
+    </div>
+
+    <!-- 데스크탑 -->
+    <div class="wf-card">
+      <div class="wf-label">타이틀 화면 (데스크탑 640px) <span class="badge new">NEW</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:24px;min-height:480px">
+
+          <!-- 상단 로고 영역 -->
+          <div class="wf-box solid" style="width:100%;height:100px;margin-bottom:20px;font-size:22px;letter-spacing:4px;color:#f0e040;border-color:#f0e040;background:#1a1800">
+            ▶ 수이카 게임
+            <div style="font-size:10px;color:#808040;margin-top:4px;letter-spacing:2px">SUIKA GAME</div>
+          </div>
+
+          <!-- 가운데 레이아웃 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+            <!-- 좌: 최고 점수 + 시작 -->
+            <div>
+              <div class="wf-box accent" style="width:100%;margin-bottom:8px;font-size:12px;padding:10px">
+                🏆 최고 점수<br>
+                <span style="font-size:20px;color:#f0e040">1,234</span>
+              </div>
+              <div class="wf-box primary" style="width:100%;margin-bottom:6px;font-size:14px;padding:14px">
+                ▶ 게임 시작
+              </div>
+              <div class="wf-row" style="gap:6px">
+                <div class="wf-box solid" style="flex:1;font-size:10px;padding:8px">📖 도감</div>
+                <div class="wf-box solid" style="flex:1;font-size:10px;padding:8px">⚙ 설정</div>
+              </div>
+            </div>
+
+            <!-- 우: 과일 진화 차트 미리보기 -->
+            <div>
+              <div class="wf-box ghost" style="width:100%;height:100%;min-height:140px;flex-direction:column;gap:4px;padding:12px">
+                <div style="font-size:9px;color:#4a4a7a;margin-bottom:6px;letter-spacing:1px">과일 진화 차트</div>
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center">
+                  <div class="wf-fruit-circle" style="width:16px;height:16px;border-color:#FF3855;color:#FF3855;font-size:6px">1</div>
+                  <span style="font-size:8px;color:#4a4a7a">→</span>
+                  <div class="wf-fruit-circle" style="width:20px;height:20px;border-color:#FF5278;color:#FF5278;font-size:6px">2</div>
+                  <span style="font-size:8px;color:#4a4a7a">→</span>
+                  <div class="wf-fruit-circle" style="width:24px;height:24px;border-color:#B44DE8;color:#B44DE8;font-size:6px">3</div>
+                  <span style="font-size:8px;color:#4a4a7a">→</span>
+                  <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#FFB020;color:#FFB020;font-size:6px">4</div>
+                  <span style="font-size:8px;color:#4a4a7a">→</span>
+                  <div class="wf-fruit-circle" style="width:34px;height:34px;border-color:#30C860;color:#30C860;font-size:7px">수</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-annotation">
+          데스크탑: 좌우 2열 레이아웃.<br>
+          우측에 과일 진화 힌트 → 초보자 온보딩.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     3. 화면 2: 메인 게임 화면 (현재 + 개선)
+══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="section-num">3</span> 메인 게임 화면</div>
+
+  <div class="screen-grid cols-3">
+
+    <!-- 현재 상태 -->
+    <div class="wf-card">
+      <div class="wf-label">현재 게임 화면 (AS-IS) <span class="badge current">CURRENT</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:16px;min-height:520px">
+
+          <!-- 헤더 영역 (렌더러가 캔버스에 그림) -->
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <div class="wf-box solid" style="font-size:10px;padding:6px 10px">점수: 123</div>
+            <div class="wf-box solid" style="font-size:10px;padding:6px 10px">베스트: 456</div>
+          </div>
+
+          <!-- 다음 과일 -->
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+            <div class="wf-box ghost" style="font-size:9px;flex-direction:column;padding:6px">
+              <span style="color:#4a4a7a;font-size:8px;margin-bottom:3px">NEXT</span>
+              <div class="wf-fruit-circle" style="width:20px;height:20px;border-color:#FF5278;color:#FF5278;font-size:8px">딸</div>
+            </div>
+          </div>
+
+          <!-- 위험선 -->
+          <div class="wf-divider danger-line"></div>
+
+          <!-- 드롭 인디케이터 -->
+          <div style="display:flex;justify-content:center;margin:8px 0">
+            <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#FF3855;border-style:dashed;color:#FF3855;opacity:0.6;font-size:8px">체</div>
+          </div>
+
+          <!-- 게임 영역 -->
+          <div class="wf-canvas-area" style="height:280px;flex-direction:column;gap:8px">
+            <div style="font-size:9px;color:#3a3a6a">[ 물리 엔진 캔버스 영역 ]</div>
+            <!-- 쌓인 과일들 -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:flex-end;padding:8px">
+              <div class="wf-fruit-circle" style="width:24px;height:24px;border-color:#FF3855;color:#FF3855;font-size:8px">체</div>
+              <div class="wf-fruit-circle" style="width:34px;height:34px;border-color:#FFB020;color:#FFB020;font-size:9px">데</div>
+              <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#FF5278;color:#FF5278;font-size:8px">딸</div>
+              <div class="wf-fruit-circle" style="width:40px;height:40px;border-color:#FF8830;color:#FF8830;font-size:9px">감</div>
+              <div class="wf-fruit-circle" style="width:24px;height:24px;border-color:#B44DE8;color:#B44DE8;font-size:8px">포</div>
+            </div>
+          </div>
+
+          <!-- 바닥 -->
+          <div class="wf-box solid" style="width:100%;height:12px;margin-top:4px;background:#1e1e40"></div>
+        </div>
+
+        <div class="wf-annotation warn">
+          점수·NEXT·위험선이 모두 캔버스 내부에 렌더링됨.<br>
+          일시정지·뒤로가기 버튼 없음.<br>
+          과일 도감/진행상황 없음.
+        </div>
+      </div>
+    </div>
+
+    <!-- 제안: 개선된 게임 화면 -->
+    <div class="wf-card">
+      <div class="wf-label">개선된 게임 화면 (TO-BE) <span class="badge new">개선</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:12px;min-height:520px">
+
+          <!-- 상단 HUD 바 -->
+          <div class="wf-box primary" style="width:100%;padding:8px 12px;margin-bottom:8px;justify-content:space-between;font-size:10px">
+            <span>← 홈</span>
+            <span>수이카 게임</span>
+            <span>⏸ 일시정지</span>
+          </div>
+
+          <!-- 점수 영역 -->
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div class="wf-box accent" style="flex:1;flex-direction:column;padding:6px">
+              <span style="font-size:8px;color:#808040;letter-spacing:1px">SCORE</span>
+              <span style="font-size:16px;color:#f0e040">123</span>
+            </div>
+            <div class="wf-box solid" style="flex:1;flex-direction:column;padding:6px">
+              <span style="font-size:8px;color:#6060a0;letter-spacing:1px">BEST</span>
+              <span style="font-size:16px;color:#a0a0d0">456</span>
+            </div>
+            <!-- NEXT 과일 -->
+            <div class="wf-box solid" style="flex-direction:column;padding:6px 10px">
+              <span style="font-size:8px;color:#6060a0;letter-spacing:1px">NEXT</span>
+              <div class="wf-fruit-circle" style="width:24px;height:24px;border-color:#FF5278;color:#FF5278;font-size:9px;margin-top:2px">딸</div>
+            </div>
+          </div>
+
+          <!-- 위험선 -->
+          <div class="wf-divider danger-line"></div>
+
+          <!-- 드롭 인디케이터 -->
+          <div style="display:flex;justify-content:center;margin:8px 0">
+            <div style="position:relative">
+              <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#FF3855;border-style:dashed;color:#FF3855;opacity:0.6;font-size:8px">체</div>
+              <div style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:8px;color:#d04040;white-space:nowrap">│</div>
+            </div>
+          </div>
+
+          <!-- 게임 영역 -->
+          <div class="wf-canvas-area" style="height:240px;flex-direction:column;gap:8px">
+            <div style="font-size:9px;color:#3a3a6a">[ 물리 엔진 캔버스 영역 ]</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:flex-end;padding:8px">
+              <div class="wf-fruit-circle" style="width:24px;height:24px;border-color:#FF3855;color:#FF3855;font-size:8px">체</div>
+              <div class="wf-fruit-circle" style="width:34px;height:34px;border-color:#FFB020;color:#FFB020;font-size:9px">데</div>
+              <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#FF5278;color:#FF5278;font-size:8px">딸</div>
+              <div class="wf-fruit-circle" style="width:40px;height:40px;border-color:#FF8830;color:#FF8830;font-size:9px">감</div>
+            </div>
+          </div>
+
+          <!-- 바닥 -->
+          <div class="wf-box solid" style="width:100%;height:12px;margin-top:4px;background:#1e1e40"></div>
+
+          <!-- 하단: 과일 진행 바 -->
+          <div class="wf-box ghost" style="width:100%;margin-top:8px;padding:6px;flex-direction:column">
+            <div style="font-size:8px;color:#4a4a7a;margin-bottom:4px;letter-spacing:1px">진행상황</div>
+            <div style="display:flex;gap:4px;align-items:center;justify-content:center">
+              <div class="wf-fruit-circle" style="width:14px;height:14px;border-color:#FF3855;color:#FF3855;font-size:6px">✓</div>
+              <div class="wf-fruit-circle" style="width:16px;height:16px;border-color:#FF5278;color:#FF5278;font-size:6px">✓</div>
+              <div class="wf-fruit-circle" style="width:18px;height:18px;border-color:#B44DE8;color:#B44DE8;font-size:6px">○</div>
+              <div class="wf-fruit-circle" style="width:20px;height:20px;border-color:#2a2a5a;color:#3a3a6a;font-size:6px">○</div>
+              <div class="wf-fruit-circle" style="width:22px;height:22px;border-color:#2a2a5a;color:#3a3a6a;font-size:6px">○</div>
+              <div class="wf-fruit-circle" style="width:26px;height:26px;border-color:#2a2a5a;color:#3a3a6a;font-size:6px">○</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-annotation">
+          상단 HUD 바: 홈·일시정지 추가.<br>
+          점수 영역을 HTML로 분리 → 렌더 부하 감소.<br>
+          하단 진행 바: 어떤 과일까지 만들었는지 표시.
+        </div>
+      </div>
+    </div>
+
+    <!-- 일시정지 모달 -->
+    <div class="wf-card">
+      <div class="wf-label">일시정지 모달 <span class="badge new">NEW</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:12px;min-height:520px;position:relative">
+          <!-- 게임 배경 (흐림) -->
+          <div style="opacity:0.3;filter:blur(1px)">
+            <div class="wf-box solid" style="width:100%;height:36px;margin-bottom:6px;font-size:10px">[ HUD ]</div>
+            <div class="wf-canvas-area" style="height:320px">
+              <div style="font-size:9px;color:#2a2a5a">배경 게임 화면</div>
+            </div>
+          </div>
+
+          <!-- 일시정지 오버레이 -->
+          <div style="position:absolute;inset:0;background:rgba(0,0,10,0.7);display:flex;align-items:center;justify-content:center;border-radius:3px">
+            <div style="background:#13132a;border:1px solid #4a4a7a;border-radius:4px;padding:24px;width:200px;text-align:center">
+              <div style="font-size:14px;color:#a0a0d0;letter-spacing:3px;margin-bottom:4px">⏸ PAUSE</div>
+              <div style="font-size:10px;color:#5050a0;margin-bottom:20px">현재 점수: 123</div>
+              <div class="wf-box primary" style="width:100%;margin-bottom:8px;padding:10px;font-size:12px">▶ 계속하기</div>
+              <div class="wf-box solid" style="width:100%;margin-bottom:8px;padding:8px;font-size:11px">🔄 새로 시작</div>
+              <div class="wf-box solid" style="width:100%;padding:8px;font-size:11px">🏠 홈으로</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-annotation">
+          반투명 블러 오버레이.<br>
+          '계속하기'가 가장 눈에 띄게 (Primary 버튼).<br>
+          실수로 나가지 않도록 '홈으로'는 하단 배치.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     4. 화면 3: 게임오버 화면
+══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="section-num">4</span> 게임오버 화면</div>
+
+  <div class="screen-grid cols-2">
+
+    <!-- 현재 게임오버 -->
+    <div class="wf-card">
+      <div class="wf-label">현재 게임오버 (AS-IS) <span class="badge current">CURRENT</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:16px;min-height:400px;position:relative">
+          <!-- 게임 배경 -->
+          <div style="opacity:0.4">
+            <div class="wf-canvas-area" style="height:340px;font-size:9px;color:#2a2a5a">[ 게임 캔버스 ]</div>
+          </div>
+          <!-- 현재 오버레이: 간단한 텍스트만 -->
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+            <div class="wf-box danger" style="padding:10px 20px;font-size:13px">GAME OVER</div>
+            <div style="font-size:10px;color:#5a5a5a">클릭하여 재시작</div>
+          </div>
+        </div>
+        <div class="wf-annotation warn">
+          최종 점수가 표시되지 않음.<br>
+          신기록 여부를 알 수 없음.<br>
+          재시작 외 다른 선택지 없음.
+        </div>
+      </div>
+    </div>
+
+    <!-- 개선 게임오버 -->
+    <div class="wf-card">
+      <div class="wf-label">개선된 게임오버 (TO-BE) <span class="badge new">개선</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:16px;min-height:400px;position:relative">
+          <!-- 게임 배경 -->
+          <div style="opacity:0.2">
+            <div class="wf-canvas-area" style="height:380px;font-size:9px;color:#2a2a5a">[ 게임 캔버스 ]</div>
+          </div>
+          <!-- 개선 오버레이 -->
+          <div style="position:absolute;inset:0;background:rgba(0,0,10,0.75);display:flex;align-items:center;justify-content:center">
+            <div style="background:#13132a;border:1px solid #6a2a2a;border-radius:4px;padding:24px;width:240px;text-align:center">
+              <div style="font-size:16px;color:#ff8080;letter-spacing:3px;margin-bottom:12px">GAME OVER</div>
+
+              <!-- 점수 섹션 -->
+              <div class="wf-box accent" style="width:100%;flex-direction:column;margin-bottom:6px;padding:10px">
+                <span style="font-size:9px;color:#808040;letter-spacing:1px">최종 점수</span>
+                <span style="font-size:24px;color:#f0e040">1,234</span>
+              </div>
+              <div class="wf-box solid" style="width:100%;flex-direction:column;margin-bottom:16px;padding:8px">
+                <span style="font-size:9px;color:#6060a0">최고 기록</span>
+                <span style="font-size:14px;color:#a0a0d0">2,100</span>
+              </div>
+
+              <!-- 신기록 배지 (조건부 표시) -->
+              <div class="wf-box success" style="width:100%;margin-bottom:14px;padding:6px;font-size:11px">
+                🎉 신기록 달성!
+              </div>
+
+              <!-- 만든 과일 요약 -->
+              <div style="font-size:9px;color:#4a4a7a;margin-bottom:6px;letter-spacing:1px">이번 게임에서 만든 과일</div>
+              <div style="display:flex;justify-content:center;gap:4px;margin-bottom:16px">
+                <div class="wf-fruit-circle" style="width:18px;height:18px;border-color:#FF3855;color:#FF3855;font-size:7px">체</div>
+                <div class="wf-fruit-circle" style="width:20px;height:20px;border-color:#FF5278;color:#FF5278;font-size:7px">딸</div>
+                <div class="wf-fruit-circle" style="width:22px;height:22px;border-color:#B44DE8;color:#B44DE8;font-size:7px">포</div>
+                <div class="wf-fruit-circle" style="width:26px;height:26px;border-color:#FFB020;color:#FFB020;font-size:8px">데</div>
+                <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#2a2a5a;color:#3a3a6a;font-size:8px">?</div>
+              </div>
+
+              <!-- 액션 버튼 -->
+              <div class="wf-box primary" style="width:100%;margin-bottom:6px;padding:10px;font-size:13px">🔄 다시 도전</div>
+              <div class="wf-box solid" style="width:100%;padding:8px;font-size:11px">🏠 홈으로</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-annotation">
+          최종 점수 + 최고 기록 동시 표시.<br>
+          신기록 시 축하 메시지 (조건부).<br>
+          이번 게임 성취 (만든 과일) 요약 → 보람감 제공.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     5. 화면 4: 과일 도감 (신규 제안)
+══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="section-num">5</span> 과일 도감 — 신규 제안</div>
+
+  <div class="screen-grid cols-2">
+
+    <div class="wf-card">
+      <div class="wf-label">과일 도감 화면 <span class="badge new">NEW</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:14px;min-height:440px">
+
+          <!-- 헤더 -->
+          <div class="wf-box primary" style="width:100%;padding:8px 12px;margin-bottom:14px;justify-content:space-between;font-size:11px">
+            <span>← 뒤로</span>
+            <span>과일 도감</span>
+            <span></span>
+          </div>
+
+          <!-- 완성도 바 -->
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:#6060a0;margin-bottom:4px">
+              <span>진행상황</span>
+              <span>4 / 11</span>
+            </div>
+            <div style="background:#1a1a3a;border-radius:2px;height:6px">
+              <div style="background:linear-gradient(90deg,#40d080,#80ffa0);height:100%;width:36%;border-radius:2px"></div>
+            </div>
+          </div>
+
+          <!-- 과일 격자 -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+
+            <!-- 해금된 과일 -->
+            <div style="text-align:center">
+              <div class="wf-fruit-circle" style="width:36px;height:36px;border-color:#FF3855;background:#1a0508;color:#FF3855;font-size:11px;margin:0 auto 4px">체</div>
+              <div style="font-size:8px;color:#a06060">체리</div>
+              <div style="font-size:8px;color:#806040">1점</div>
+            </div>
+            <div style="text-align:center">
+              <div class="wf-fruit-circle" style="width:40px;height:40px;border-color:#FF5278;background:#1a0810;color:#FF5278;font-size:11px;margin:0 auto 4px">딸</div>
+              <div style="font-size:8px;color:#a06060">딸기</div>
+              <div style="font-size:8px;color:#806040">3점</div>
+            </div>
+            <div style="text-align:center">
+              <div class="wf-fruit-circle" style="width:44px;height:44px;border-color:#B44DE8;background:#180a2a;color:#B44DE8;font-size:11px;margin:0 auto 4px">포</div>
+              <div style="font-size:8px;color:#9060c0">포도</div>
+              <div style="font-size:8px;color:#806040">6점</div>
+            </div>
+            <div style="text-align:center">
+              <div class="wf-fruit-circle" style="width:48px;height:48px;border-color:#FFB020;background:#201400;color:#FFB020;font-size:11px;margin:0 auto 4px">데</div>
+              <div style="font-size:8px;color:#a08040">데코폰</div>
+              <div style="font-size:8px;color:#806040">10점</div>
+            </div>
+
+            <!-- 미해금 과일 -->
+            <div style="text-align:center;opacity:0.4">
+              <div class="wf-fruit-circle" style="width:50px;height:50px;border-color:#4a4a7a;background:#111120;color:#4a4a7a;font-size:14px;margin:0 auto 4px">?</div>
+              <div style="font-size:8px;color:#404060">???</div>
+              <div style="font-size:8px;color:#404060">- 점</div>
+            </div>
+            <div style="text-align:center;opacity:0.4">
+              <div class="wf-fruit-circle" style="width:54px;height:54px;border-color:#4a4a7a;background:#111120;color:#4a4a7a;font-size:14px;margin:0 auto 4px">?</div>
+              <div style="font-size:8px;color:#404060">???</div>
+              <div style="font-size:8px;color:#404060">- 점</div>
+            </div>
+            <div style="text-align:center;opacity:0.4">
+              <div class="wf-fruit-circle" style="width:58px;height:58px;border-color:#4a4a7a;background:#111120;color:#4a4a7a;font-size:14px;margin:0 auto 4px">?</div>
+              <div style="font-size:8px;color:#404060">???</div>
+              <div style="font-size:8px;color:#404060">- 점</div>
+            </div>
+            <div style="text-align:center;opacity:0.2">
+              <div class="wf-fruit-circle" style="width:62px;height:62px;border-color:#4a4a7a;background:#111120;color:#4a4a7a;font-size:14px;margin:0 auto 4px">?</div>
+              <div style="font-size:8px;color:#404060">???</div>
+              <div style="font-size:8px;color:#404060">- 점</div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-annotation">
+          게임 중 처음 만든 과일만 해금.<br>
+          미해금은 '?' 표시 → 수집 욕구 자극.<br>
+          LocalStorage로 저장 (기존 useLocalStorage 훅 활용).
+        </div>
+      </div>
+    </div>
+
+    <div class="wf-card">
+      <div class="wf-label">과일 상세 팝업 <span class="badge new">NEW</span></div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:14px;min-height:440px;position:relative">
+          <!-- 배경 -->
+          <div style="opacity:0.3">
+            <div class="wf-box solid" style="width:100%;height:30px;margin-bottom:8px"></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;opacity:0.5">
+              <div class="wf-box ghost" style="height:60px"></div>
+              <div class="wf-box ghost" style="height:60px"></div>
+              <div class="wf-box ghost" style="height:60px"></div>
+              <div class="wf-box ghost" style="height:60px"></div>
+            </div>
+          </div>
+
+          <!-- 팝업 -->
+          <div style="position:absolute;inset:20px;background:#13132a;border:1px solid #4a4a9a;border-radius:6px;padding:20px;display:flex;flex-direction:column;align-items:center">
+            <div style="font-size:10px;color:#5050a0;letter-spacing:1px;align-self:flex-end;cursor:pointer;margin-bottom:12px">✕ 닫기</div>
+
+            <!-- 과일 큰 아이콘 -->
+            <div class="wf-fruit-circle" style="width:80px;height:80px;border-color:#B44DE8;background:#180a2a;color:#B44DE8;font-size:20px;margin-bottom:14px">포도</div>
+
+            <!-- 과일 정보 -->
+            <div style="font-size:16px;color:#d0a0ff;margin-bottom:4px">포도</div>
+            <div style="font-size:10px;color:#6060a0;margin-bottom:16px">Lv. 3 · 반지름 33px</div>
+
+            <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+              <div class="wf-box solid" style="flex-direction:column;padding:8px">
+                <span style="font-size:8px;color:#5050a0">점수</span>
+                <span style="font-size:16px;color:#a0a0d0">6점</span>
+              </div>
+              <div class="wf-box solid" style="flex-direction:column;padding:8px">
+                <span style="font-size:8px;color:#5050a0">합쳐지면</span>
+                <div class="wf-fruit-circle" style="width:28px;height:28px;border-color:#FFB020;color:#FFB020;font-size:9px;margin-top:2px">데</div>
+              </div>
+            </div>
+
+            <div class="wf-box ghost" style="width:100%;font-size:9px;padding:8px;color:#5050a0">
+              처음 만든 날: 2026-04-10
+            </div>
+          </div>
+        </div>
+        <div class="wf-annotation">
+          과일 탭 시 상세 팝업 표시.<br>
+          "합쳐지면 →" 다음 과일 미리보기.<br>
+          처음 획득 날짜 기록 → 수집 성취감.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     6. 반응형 레이아웃
+══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="section-num">6</span> 반응형 레이아웃 비교</div>
+
+  <div class="screen-grid cols-3">
+
+    <div class="wf-card">
+      <div class="wf-label">모바일 (360px)</div>
+      <div class="wf-body">
+        <div class="wf-screen mobile" style="min-height:360px;padding:8px 12px 16px">
+          <div class="wf-box primary" style="width:100%;margin:8px 0;padding:6px;font-size:9px;justify-content:space-between">
+            <span>←</span><span>수이카</span><span>⏸</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <div class="wf-box accent" style="flex:1;font-size:9px;padding:4px;flex-direction:column">
+              <span style="font-size:7px">SCORE</span><span>123</span>
+            </div>
+            <div class="wf-box solid" style="flex:1;font-size:9px;padding:4px;flex-direction:column">
+              <span style="font-size:7px">BEST</span><span>456</span>
+            </div>
+            <div class="wf-box solid" style="font-size:8px;padding:4px;flex-direction:column">
+              <span style="font-size:7px">NEXT</span>
+              <div class="wf-fruit-circle" style="width:16px;height:16px;border-color:#FF5278;color:#FF5278;font-size:7px">딸</div>
+            </div>
+          </div>
+          <div class="wf-canvas-area" style="height:220px;font-size:9px;color:#3a3a6a">
+            게임 캔버스<br>(scale 자동조절)
+          </div>
+          <div class="wf-box ghost" style="width:100%;margin-top:6px;padding:4px;font-size:8px">
+            [ 과일 진행 바 ]
+          </div>
+        </div>
+        <div class="wf-annotation">전체 너비 캔버스. 상단 HUD.</div>
+      </div>
+    </div>
+
+    <div class="wf-card">
+      <div class="wf-label">태블릿 (768px)</div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:12px;min-height:360px">
+          <div class="wf-box primary" style="width:100%;margin-bottom:10px;padding:8px;font-size:10px;justify-content:space-between">
+            <span>← 홈</span><span>수이카 게임</span><span>⏸ 일시정지</span>
+          </div>
+          <div style="display:grid;grid-template-columns:200px 1fr;gap:12px">
+            <!-- 좌: 사이드바 -->
+            <div>
+              <div class="wf-box accent" style="width:100%;margin-bottom:8px;flex-direction:column;padding:10px">
+                <span style="font-size:8px;color:#808040">SCORE</span>
+                <span style="font-size:20px;color:#f0e040">123</span>
+              </div>
+              <div class="wf-box solid" style="width:100%;margin-bottom:8px;flex-direction:column;padding:8px">
+                <span style="font-size:8px;color:#6060a0">BEST</span>
+                <span style="font-size:16px">456</span>
+              </div>
+              <div class="wf-box solid" style="width:100%;margin-bottom:8px;flex-direction:column;padding:10px">
+                <span style="font-size:8px;color:#6060a0">NEXT</span>
+                <div class="wf-fruit-circle" style="width:40px;height:40px;border-color:#FF5278;color:#FF5278;font-size:12px;margin-top:4px">딸기</div>
+              </div>
+              <div class="wf-box ghost" style="width:100%;flex-direction:column;padding:8px;font-size:8px">
+                <span style="color:#4a4a7a;margin-bottom:4px">진행상황</span>
+                <div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center">
+                  <div class="wf-fruit-circle" style="width:12px;height:12px;border-color:#FF3855;color:#FF3855;font-size:6px">✓</div>
+                  <div class="wf-fruit-circle" style="width:13px;height:13px;border-color:#FF5278;color:#FF5278;font-size:6px">✓</div>
+                  <div class="wf-fruit-circle" style="width:14px;height:14px;border-color:#3a3a6a;color:#4a4a7a;font-size:6px">○</div>
+                  <div class="wf-fruit-circle" style="width:15px;height:15px;border-color:#3a3a6a;color:#4a4a7a;font-size:6px">○</div>
+                </div>
+              </div>
+            </div>
+            <!-- 우: 캔버스 -->
+            <div class="wf-canvas-area" style="min-height:240px;font-size:9px;color:#3a3a6a">
+              게임 캔버스
+            </div>
+          </div>
+        </div>
+        <div class="wf-annotation">좌측 사이드바에 HUD. 우측 캔버스.</div>
+      </div>
+    </div>
+
+    <div class="wf-card">
+      <div class="wf-label">데스크탑 (1024px+)</div>
+      <div class="wf-body">
+        <div class="wf-screen" style="padding:12px;min-height:360px">
+          <div class="wf-box primary" style="width:100%;margin-bottom:10px;padding:8px;font-size:10px;justify-content:space-between">
+            <span>← 홈</span><span>수이카 게임</span><span>⏸ 일시정지</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 180px;gap:12px">
+            <!-- 좌 사이드바 -->
+            <div>
+              <div class="wf-box accent" style="width:100%;margin-bottom:8px;flex-direction:column;padding:10px">
+                <span style="font-size:8px;color:#808040">SCORE</span>
+                <span style="font-size:18px;color:#f0e040">123</span>
+              </div>
+              <div class="wf-box solid" style="width:100%;flex-direction:column;padding:8px">
+                <span style="font-size:8px;color:#6060a0">BEST</span>
+                <span style="font-size:14px">456</span>
+              </div>
+            </div>
+            <!-- 중앙 캔버스 -->
+            <div class="wf-canvas-area" style="min-height:240px;font-size:9px;color:#3a3a6a">
+              게임 캔버스
+            </div>
+            <!-- 우 사이드바 -->
+            <div>
+              <div class="wf-box solid" style="width:100%;margin-bottom:8px;flex-direction:column;padding:10px">
+                <span style="font-size:8px;color:#6060a0">NEXT</span>
+                <div class="wf-fruit-circle" style="width:40px;height:40px;border-color:#FF5278;color:#FF5278;font-size:12px;margin:4px auto">딸기</div>
+              </div>
+              <div class="wf-box ghost" style="width:100%;flex-direction:column;padding:8px;gap:4px">
+                <span style="font-size:8px;color:#4a4a7a">과일 진행</span>
+                <div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center">
+                  <div class="wf-fruit-circle" style="width:14px;height:14px;border-color:#FF3855;color:#FF3855;font-size:6px">✓</div>
+                  <div class="wf-fruit-circle" style="width:15px;height:15px;border-color:#FF5278;color:#FF5278;font-size:6px">✓</div>
+                  <div class="wf-fruit-circle" style="width:16px;height:16px;border-color:#3a3a6a;color:#4a4a7a;font-size:6px">○</div>
+                  <div class="wf-fruit-circle" style="width:17px;height:17px;border-color:#3a3a6a;color:#4a4a7a;font-size:6px">○</div>
+                  <div class="wf-fruit-circle" style="width:18px;height:18px;border-color:#3a3a6a;color:#4a4a7a;font-size:6px">○</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-annotation">3열: 좌 점수 / 중앙 캔버스 / 우 NEXT+진행.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     7. 컴포넌트 개선 스펙
+══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="section-num">7</span> 개선 항목 요약</div>
+
+  <div class="wf-card">
+    <div class="wf-label">우선순위별 개선 항목</div>
+    <div class="wf-body">
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>우선순위</th>
+            <th>화면</th>
+            <th>개선 항목</th>
+            <th>구현 힌트</th>
+            <th>태그</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🔴 High</td>
+            <td>게임오버</td>
+            <td>최종 점수 + 최고기록 표시</td>
+            <td>GameCanvas.tsx의 highScore, state.score 활용</td>
+            <td><span class="tag fix">UX개선</span></td>
+          </tr>
+          <tr>
+            <td>🔴 High</td>
+            <td>전체</td>
+            <td>일시정지 기능</td>
+            <td>Matter.Runner 정지/재개 API 사용</td>
+            <td><span class="tag new">신규</span></td>
+          </tr>
+          <tr>
+            <td>🟡 Med</td>
+            <td>타이틀</td>
+            <td>타이틀/홈 화면 추가</td>
+            <td>GamePhase에 TITLE 상태 추가 또는 라우팅</td>
+            <td><span class="tag new">신규</span></td>
+          </tr>
+          <tr>
+            <td>🟡 Med</td>
+            <td>게임</td>
+            <td>HUD를 HTML로 분리 (캔버스 외부)</td>
+            <td>renderer.ts에서 점수 렌더링 제거 → React JSX로</td>
+            <td><span class="tag fix">리팩터</span></td>
+          </tr>
+          <tr>
+            <td>🟡 Med</td>
+            <td>게임오버</td>
+            <td>신기록 배지 (조건부)</td>
+            <td>score > highScore 조건 확인</td>
+            <td><span class="tag fix">UX개선</span></td>
+          </tr>
+          <tr>
+            <td>🟢 Low</td>
+            <td>게임</td>
+            <td>하단 과일 진행 바</td>
+            <td>useLocalStorage로 unlockedFruits 저장</td>
+            <td><span class="tag new">신규</span></td>
+          </tr>
+          <tr>
+            <td>🟢 Low</td>
+            <td>신규</td>
+            <td>과일 도감 화면</td>
+            <td>별도 페이지 또는 모달 컴포넌트</td>
+            <td><span class="tag new">신규</span></td>
+          </tr>
+          <tr>
+            <td>🟢 Low</td>
+            <td>게임오버</td>
+            <td>이번 게임 만든 과일 요약</td>
+            <td>GameState에 mergedFruits Set 추가</td>
+            <td><span class="tag new">신규</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note-grid">
+    <div class="note-box highlight">
+      <h4>핵심 사용자 스토리</h4>
+      <ul>
+        <li>나는 게임이 끝났을 때 내 점수가 얼마인지 알고 싶다</li>
+        <li>나는 실수로 게임을 나가지 않고 잠깐 멈출 수 있기를 원한다</li>
+        <li>나는 수박을 만들어본 적 없는데 가능한지 알고 싶다</li>
+        <li>나는 어떤 과일들이 있는지 미리 보고 싶다</li>
+      </ul>
+    </div>
+    <div class="note-box">
+      <h4>기존 코드 활용 포인트</h4>
+      <ul>
+        <li>useLocalStorage → 과일 도감, 신기록</li>
+        <li>useResponsive → 반응형 레이아웃</li>
+        <li>GamePhase enum → 타이틀 상태 추가</li>
+        <li>FRUITS 배열 → 도감 데이터 소스</li>
+        <li>Matter.Runner → 일시정지/재개</li>
+      </ul>
+    </div>
+    <div class="note-box">
+      <h4>디자인 원칙 (현재 스타일 유지)</h4>
+      <ul>
+        <li>배경: #0F0F1E ~ #1A1A2E 계열</li>
+        <li>폰트: Jua (레트로 8비트)</li>
+        <li>강조: #f0e040 (골드), #40a0d0 (블루)</li>
+        <li>위험: #FF0000 / #d04040</li>
+        <li>성공: #40d080 (그린)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- 푸터 -->
+<div style="max-width:1200px;margin:0 auto;padding-top:40px;border-top:1px solid #1a1a3a;font-size:10px;color:#3a3a6a;text-align:center">
+  수이카 게임 UX 와이어프레임 · Sally (UX Designer) · 2026-04-10<br>
+  이 문서는 구현 가이드용 로우파이 와이어프레임입니다. 실제 비주얼은 기존 레트로 스타일을 유지합니다.
+</div>
+
+</body>
+</html>
