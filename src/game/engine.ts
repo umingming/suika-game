@@ -7,8 +7,10 @@ const { Engine, Composite, Bodies, Body } = Matter;
 
 export function createGameEngine(): Matter.Engine {
   const engine = Engine.create({
-    gravity: { x: 0, y: 2.0, scale: 0.001 },
-  });
+    gravity: { x: 0, y: 2.5, scale: 0.001 },
+    positionIterations: 10,
+    velocityIterations: 10,
+  } as Matter.IEngineDefinition);
 
   const wallOptions: Matter.IChamferableBodyDefinition = {
     isStatic: true,

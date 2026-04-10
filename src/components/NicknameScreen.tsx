@@ -7,33 +7,18 @@ interface NicknameScreenProps {
 }
 
 export default function NicknameScreen({ onStart }: NicknameScreenProps) {
-  const [nickname, setNickname] = useState('');
+  const [nickname, setNickname] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('nickname') ?? '';
+    }
+    return '';
+  });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load existing nickname on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/nickname');
-        const data = await res.json();
-        if (data.nickname) {
-          setNickname(data.nickname);
-        }
-      } catch {
-        // Ignore fetch errors
-      } finally {
-        setLoading(false);
-      }
-    })();
+    inputRef.current?.focus();
   }, []);
-
-  useEffect(() => {
-    if (!loading && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [loading]);
 
   const handleSubmit = async () => {
     const trimmed = nickname.trim();
@@ -50,16 +35,15 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
 
     setError('');
 
-    // Save nickname but don't block game start on failure
-    try {
-      await fetch('/api/nickname', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname: trimmed }),
-      });
-    } catch {
-      // Continue even if save fails - allow offline play
-    }
+    // Save to localStorage for instant recall next time
+    localStorage.setItem('nickname', trimmed);
+
+    // Fire-and-forget: save to server without blocking game start
+    fetch('/api/nickname', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname: trimmed }),
+    }).catch(() => {});
 
     onStart(trimmed);
   };
@@ -85,15 +69,13 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
             value={nickname}
             onChange={e => setNickname(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={loading ? '불러오는 중...' : '닉네임'}
+            placeholder="닉네임"
             maxLength={10}
-            disabled={loading}
           />
           {error && <div className="nickname-error">{error}</div>}
           <button
             className="nickname-btn"
             onClick={handleSubmit}
-            disabled={loading}
           >
             시작하기
           </button>

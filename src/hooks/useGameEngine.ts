@@ -12,7 +12,7 @@ export function useGameEngine() {
     const engine = createGameEngine();
     engineRef.current = engine;
 
-    const runner = Matter.Runner.create({ delta: 1000 / 60 });
+    const runner = Matter.Runner.create({ delta: 1000 / 120, isFixed: true } as Matter.IRunnerOptions);
     runnerRef.current = runner;
     Matter.Runner.run(runner, engine);
 

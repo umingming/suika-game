@@ -17,6 +17,10 @@ export function setupCollisionHandler(
   callbacks: CollisionCallbacks
 ): () => void {
   let gameOverCheckTimeout: ReturnType<typeof setTimeout> | null = null;
+  // Track how long each fruit has been continuously above the danger line
+  const dangerTimers = new Map<number, number>();
+  // Fruit must stay above danger line for this many consecutive checks (3 seconds)
+  const DANGER_THRESHOLD = 3;
 
   const handler = (event: Matter.IEventCollision<Matter.Engine>) => {
     const pairs = event.pairs;
@@ -74,17 +78,37 @@ export function setupCollisionHandler(
   // Game over check: runs periodically
   const checkGameOver = () => {
     const bodies = Composite.allBodies(engine.world);
+    const activeFruitIds = new Set<number>();
+
     for (const body of bodies) {
       if (body.isStatic) continue;
       const fb = body as FruitBody;
       if (fb.fruitLevel === undefined) continue;
       if (fb.isMerging) continue;
 
-      // Check if fruit is above danger line and has settled (low velocity)
+      activeFruitIds.add(fb.id);
+
+      // Check if fruit top is above danger line and has settled
       const speed = Math.sqrt(fb.velocity.x ** 2 + fb.velocity.y ** 2);
-      if (fb.position.y - FRUITS[fb.fruitLevel].radius < DANGER_LINE_Y && speed < 1) {
-        callbacks.onGameOver();
-        return;
+      if (fb.position.y - FRUITS[fb.fruitLevel].radius < DANGER_LINE_Y && speed < 2) {
+        const count = (dangerTimers.get(fb.id) ?? 0) + 1;
+        dangerTimers.set(fb.id, count);
+
+        // Only trigger game over if fruit has been above the line for sustained period
+        if (count >= DANGER_THRESHOLD) {
+          callbacks.onGameOver();
+          return;
+        }
+      } else {
+        // Fruit moved below line or is still moving fast — reset its timer
+        dangerTimers.delete(fb.id);
+      }
+    }
+
+    // Clean up timers for fruits that no longer exist (merged or removed)
+    for (const id of dangerTimers.keys()) {
+      if (!activeFruitIds.has(id)) {
+        dangerTimers.delete(id);
       }
     }
   };
