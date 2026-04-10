@@ -14,7 +14,7 @@ export const FRUITS: FruitConfig[] = [
   { name: '김하성', radius: 120, color: '#EC5095', highlight: '#FF8AB0', scoreValue: 66, level: 10, decorations: [], image: '/players/10.png' },
 ];
 
-export const MAX_DROP_LEVEL = 4;
+export const MAX_DROP_LEVEL = 5;
 
 export function getRandomDropLevel(): number {
   return Math.floor(Math.random() * (MAX_DROP_LEVEL + 1));

@@ -7,7 +7,7 @@ const { Engine, Composite, Bodies, Body } = Matter;
 
 export function createGameEngine(): Matter.Engine {
   const engine = Engine.create({
-    gravity: { x: 0, y: 1.5, scale: 0.001 },
+    gravity: { x: 0, y: 2.0, scale: 0.001 },
   });
 
   const wallOptions: Matter.IChamferableBodyDefinition = {
