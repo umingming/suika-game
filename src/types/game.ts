@@ -39,6 +39,7 @@ export interface FruitConfig {
   level: number;
   decorations: DecoType[];
   decoColor?: string;
+  image: string;
 }
 
 export interface MergeEffect {

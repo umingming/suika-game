@@ -4,7 +4,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import Matter from 'matter-js';
 import { GAME_WIDTH, GAME_HEIGHT, DROP_Y, DROP_COOLDOWN_MS } from '@/game/constants';
 import { createFruitBody } from '@/game/engine';
-import { renderFrame } from '@/game/renderer';
+import { renderFrame, preloadPlayerImages } from '@/game/renderer';
 import { setupCollisionHandler } from '@/game/collision';
 import { setupControls } from '@/game/controls';
 import {
@@ -21,7 +21,12 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { GamePhase } from '@/types/game';
 import type { GameState, MergeEffect } from '@/types/game';
 
-export default function GameCanvas() {
+interface GameCanvasProps {
+  onGameOver?: (score: number) => void;
+  isOverlayActive?: boolean;
+}
+
+export default function GameCanvas({ onGameOver: onGameOverProp, isOverlayActive }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { engineRef, runnerRef } = useGameEngine();
@@ -62,11 +67,8 @@ export default function GameCanvas() {
 
     if (!engine) return;
 
-    // Handle game over click → restart
-    if (state.phase === GamePhase.GAME_OVER) {
-      resetGame();
-      return;
-    }
+    // Game over and overlay active — don't handle canvas clicks
+    if (state.phase === GamePhase.GAME_OVER) return;
 
     if (state.phase !== GamePhase.READY) return;
 
@@ -85,10 +87,15 @@ export default function GameCanvas() {
       gameStateRef.current = advanceToNextFruit(gameStateRef.current);
       forceRender(n => n + 1);
     }, DROP_COOLDOWN_MS);
-  }, [engineRef, resetGame]);
+  }, [engineRef]);
 
   const handleMove = useCallback((x: number) => {
     dropXRef.current = x;
+  }, []);
+
+  // Preload player images
+  useEffect(() => {
+    preloadPlayerImages();
   }, []);
 
   // Setup collision handler
@@ -109,6 +116,7 @@ export default function GameCanvas() {
         if (gameStateRef.current.phase === GamePhase.GAME_OVER) return;
         gameStateRef.current = setGameOver(gameStateRef.current);
         forceRender(n => n + 1);
+        onGameOverProp?.(gameStateRef.current.score);
       },
       onMergeEffect: (effect) => {
         effectsRef.current.push(effect);
@@ -117,7 +125,7 @@ export default function GameCanvas() {
 
     collisionCleanupRef.current = cleanup;
     return cleanup;
-  }, [engineRef, highScore, setHighScore]);
+  }, [engineRef, highScore, setHighScore, onGameOverProp]);
 
   // Setup controls
   useEffect(() => {
@@ -151,6 +159,7 @@ export default function GameCanvas() {
       .filter(e => e.alpha > 0 && e.radius < e.maxRadius);
 
     const state = gameStateRef.current;
+    const showCanvasGameOver = state.phase === GamePhase.GAME_OVER && !isOverlayActive;
     renderFrame(
       ctx,
       engine,
@@ -160,7 +169,7 @@ export default function GameCanvas() {
       effectsRef.current,
       state.score,
       highScore,
-      state.phase === GamePhase.GAME_OVER
+      showCanvasGameOver
     );
   });
 
@@ -168,7 +177,7 @@ export default function GameCanvas() {
     <div
       ref={containerRef}
       className="w-full h-dvh flex items-start justify-center overflow-hidden"
-      style={{ background: '#0F0F1E' }}
+      style={{ background: '#2D0A1B' }}
     >
       <canvas
         ref={canvasRef}
