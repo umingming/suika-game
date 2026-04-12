@@ -39,10 +39,10 @@ export default function GameApp() {
     setScreen('playing');
   }, []);
 
-  const handleGameOver = useCallback((score: number) => {
+  const handleGameOver = useCallback(async (score: number) => {
     setFinalScore(score);
+    await submitScore(score);
     setScreen('gameover');
-    submitScore(score);
   }, [submitScore]);
 
   const handleRestart = useCallback(() => {
