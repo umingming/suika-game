@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+interface RankingEntry {
+  nickname: string;
+  score: number;
+  ip: string;
+}
+
 interface NicknameScreenProps {
   onStart: (nickname: string) => void;
 }
@@ -14,6 +20,10 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
     return '';
   });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
+  const [rankingEntries, setRankingEntries] = useState<RankingEntry[]>([]);
+  const [rankingLoading, setRankingLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -34,16 +44,23 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
     }
 
     setError('');
+    setSubmitting(true);
 
     // Save to localStorage for instant recall next time
     localStorage.setItem('nickname', trimmed);
 
-    // Fire-and-forget: save to server without blocking game start
-    fetch('/api/nickname', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nickname: trimmed }),
-    }).catch(() => {});
+    // Await nickname save to Redis before starting game
+    try {
+      await fetch('/api/nickname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: trimmed }),
+      });
+    } catch {
+      // Even if save fails, allow game start
+    } finally {
+      setSubmitting(false);
+    }
 
     onStart(trimmed);
   };
@@ -51,6 +68,20 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSubmit();
+    }
+  };
+
+  const handleShowRanking = async () => {
+    setShowRanking(true);
+    setRankingLoading(true);
+    try {
+      const res = await fetch('/api/scores');
+      const data = await res.json();
+      setRankingEntries(data.entries ?? []);
+    } catch {
+      setRankingEntries([]);
+    } finally {
+      setRankingLoading(false);
     }
   };
 
@@ -76,11 +107,57 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
           <button
             className="nickname-btn"
             onClick={handleSubmit}
+            disabled={submitting}
           >
-            시작하기
+            {submitting ? '접속 중...' : '시작하기'}
+          </button>
+          <button
+            className="nickname-btn nickname-btn-ranking"
+            onClick={handleShowRanking}
+          >
+            랭킹 보기
           </button>
         </div>
       </div>
+
+      {showRanking && (
+        <div className="ranking-overlay" onClick={() => setShowRanking(false)}>
+          <div className="ranking-box" onClick={e => e.stopPropagation()}>
+            <h2 className="ranking-title">Top 10 랭킹</h2>
+
+            <div className="ranking-table-wrap">
+              {rankingLoading ? (
+                <div className="ranking-loading">순위 불러오는 중...</div>
+              ) : rankingEntries.length === 0 ? (
+                <div className="ranking-loading">아직 기록이 없습니다</div>
+              ) : (
+                <table className="ranking-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>닉네임</th>
+                      <th>점수</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rankingEntries.map((entry, i) => (
+                      <tr key={i}>
+                        <td>{i + 1}</td>
+                        <td>{entry.nickname}</td>
+                        <td>{entry.score}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <button className="ranking-btn" onClick={() => setShowRanking(false)}>
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

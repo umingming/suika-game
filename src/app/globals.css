@@ -140,6 +140,17 @@ html, body {
   cursor: not-allowed;
 }
 
+.nickname-btn-ranking {
+  background: #FFFFFF;
+  color: #8B1A4A;
+  border: 3px solid #8B1A4A;
+  margin-top: 0;
+}
+
+.nickname-btn-ranking:hover {
+  background: #F5E6EC;
+}
+
 /* ── Ranking Overlay ── */
 
 .ranking-overlay {

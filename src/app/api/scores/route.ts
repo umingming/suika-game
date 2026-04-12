@@ -28,18 +28,33 @@ export async function GET() {
     const redis = getRedis();
     if (!redis) return NextResponse.json({ entries: [] });
     // Get top 10 from sorted set (highest scores first)
-    const results = await redis.zrange<string[]>('leaderboard', 0, 9, { rev: true, withScores: true });
+    const results = await redis.zrange('leaderboard', 0, 9, { rev: true, withScores: true });
 
-    // results is [member, score, member, score, ...]
+    // Handle both @upstash/redis return formats:
+    // - Newer versions: [{value: string, score: number}, ...]
+    // - Older versions: flat array [member, score, member, score, ...]
     const entries: LeaderboardEntry[] = [];
-    for (let i = 0; i < results.length; i += 2) {
-      const member = results[i];
-      const score = Number(results[i + 1]);
-      // member format: "ip:nickname"
-      const colonIdx = member.indexOf(':');
-      const ip = member.substring(0, colonIdx);
-      const nickname = member.substring(colonIdx + 1);
-      entries.push({ nickname, score, ip });
+
+    if (results.length > 0 && typeof results[0] === 'object' && results[0] !== null && 'score' in results[0]) {
+      // Object array format: [{value, score}, ...]
+      for (const item of results as Array<{ value: string; score: number }>) {
+        const member = String(item.value);
+        const colonIdx = member.indexOf(':');
+        const ip = member.substring(0, colonIdx);
+        const nickname = member.substring(colonIdx + 1);
+        entries.push({ nickname, score: Number(item.score), ip });
+      }
+    } else {
+      // Flat array format: [member, score, member, score, ...]
+      const flat = results as string[];
+      for (let i = 0; i < flat.length; i += 2) {
+        const member = flat[i];
+        const score = Number(flat[i + 1]);
+        const colonIdx = member.indexOf(':');
+        const ip = member.substring(0, colonIdx);
+        const nickname = member.substring(colonIdx + 1);
+        entries.push({ nickname, score, ip });
+      }
     }
 
     // Mask IPs for privacy in response
