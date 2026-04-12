@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import NicknameScreen from './NicknameScreen';
 import RankingOverlay from './RankingOverlay';
 import GameCanvas from './GameCanvas';
@@ -39,11 +39,10 @@ export default function GameApp() {
     setScreen('playing');
   }, []);
 
-  const handleGameOver = useCallback(async (score: number) => {
+  const handleGameOver = useCallback((score: number) => {
     setFinalScore(score);
-    await submitScore(score);
     setScreen('gameover');
-  }, [submitScore]);
+  }, []);
 
   const handleRestart = useCallback(() => {
     setGameKey(k => k + 1);
@@ -89,6 +88,7 @@ export default function GameApp() {
           nickname={nickname}
           onRestart={handleRestart}
           onNicknameChange={handleNicknameChange}
+          onSubmitScore={submitScore}
         />
       )}
     </div>

@@ -34,7 +34,8 @@ html, body {
   background: #FFFFFF;
   border: 3px solid #000000;
   position: relative;
-  width: 340px;
+  width: 90%;
+  max-width: 340px;
 }
 
 .nickname-container::before {
@@ -154,7 +155,7 @@ html, body {
 /* ── Ranking Overlay ── */
 
 .ranking-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
@@ -167,7 +168,8 @@ html, body {
   background: #FFFFFF;
   border: 3px solid #000000;
   padding: 24px 20px;
-  width: 340px;
+  width: 90%;
+  max-width: 340px;
   max-height: 80dvh;
   overflow-y: auto;
   position: relative;

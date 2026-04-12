@@ -176,20 +176,28 @@ export default function GameCanvas({ onGameOver: onGameOverProp, isOverlayActive
   return (
     <div
       ref={containerRef}
-      className="w-full h-dvh flex items-start justify-center overflow-hidden"
+      className="w-full h-dvh flex items-center justify-center overflow-hidden"
       style={{ background: '#2D0A1B' }}
     >
-      <canvas
-        ref={canvasRef}
-        width={GAME_WIDTH}
-        height={GAME_HEIGHT}
+      <div
         style={{
-          transform: `scale(${scale})`,
-          transformOrigin: 'top center',
-          touchAction: 'none',
-          cursor: 'pointer',
+          width: GAME_WIDTH * scale,
+          height: GAME_HEIGHT * scale,
+          flexShrink: 0,
         }}
-      />
+      >
+        <canvas
+          ref={canvasRef}
+          width={GAME_WIDTH}
+          height={GAME_HEIGHT}
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            touchAction: 'none',
+            cursor: 'pointer',
+          }}
+        />
+      </div>
     </div>
   );
 }

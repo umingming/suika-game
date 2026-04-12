@@ -13,6 +13,7 @@ interface RankingOverlayProps {
   nickname: string;
   onRestart: () => void;
   onNicknameChange: (nickname: string) => Promise<string | null>;
+  onSubmitScore: (score: number) => Promise<void>;
 }
 
 export default function RankingOverlay({
@@ -20,6 +21,7 @@ export default function RankingOverlay({
   nickname,
   onRestart,
   onNicknameChange,
+  onSubmitScore,
 }: RankingOverlayProps) {
   const [entries, setEntries] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,11 @@ export default function RankingOverlay({
   useEffect(() => {
     (async () => {
       try {
+        await onSubmitScore(score);
+      } catch {
+        // Score submission failed — still show rankings
+      }
+      try {
         const res = await fetch('/api/scores');
         const data = await res.json();
         setEntries(data.entries ?? []);
@@ -40,6 +47,7 @@ export default function RankingOverlay({
         setLoading(false);
       }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

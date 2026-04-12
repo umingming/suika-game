@@ -343,10 +343,23 @@ function drawFruitStages(ctx: CanvasRenderingContext2D): void {
   const count = FRUITS.length; // 11
   const centerY = panelY + panelH / 2;
 
+  const padding = 10;
+  const availableW = GAME_WIDTH - padding * 2;
+
   // Calculate mini sizes for each fruit
-  const sizes = FRUITS.map((_, i) => 10 * Math.pow(1.1, i));
-  const totalDiameters = sizes.reduce((sum, s) => sum + s * 2, 0);
-  const gap = 20;
+  let sizes = FRUITS.map((_, i) => 11 * Math.pow(1.1, i));
+  let totalDiameters = sizes.reduce((sum, s) => sum + s * 2, 0);
+  const minGap = 2;
+  let gap = Math.max(minGap, (availableW - totalDiameters) / (count - 1));
+
+  // If still too wide, scale down all sizes to fit
+  if (totalDiameters + minGap * (count - 1) > availableW) {
+    const scaleFactor = (availableW - minGap * (count - 1)) / totalDiameters;
+    sizes = sizes.map(s => s * scaleFactor);
+    totalDiameters = sizes.reduce((sum, s) => sum + s * 2, 0);
+    gap = minGap;
+  }
+
   const totalW = totalDiameters + gap * (count - 1);
   let curX = (GAME_WIDTH - totalW) / 2;
 
@@ -422,7 +435,14 @@ export function renderFrame(
 
   // Score box
   ctx.save();
-  drawCuteBox(ctx, 8, 8, 125, 74);
+  const scoreBoxW = 125;
+  const scoreBoxH = 74;
+  drawCuteBox(ctx, 8, 8, scoreBoxW, scoreBoxH);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(8, 8, scoreBoxW, scoreBoxH);
+  ctx.clip();
 
   ctx.fillStyle = '#000000';
   ctx.font = `bold 10px ${FONT}`;
@@ -430,12 +450,15 @@ export function renderFrame(
   ctx.fillText('SCORE', 20, 22);
 
   ctx.fillStyle = '#000000';
-  ctx.font = `bold 22px ${FONT}`;
-  ctx.fillText(`${score}`, 20, 48);
+  const scoreStr = `${score}`;
+  const scoreFontSize = scoreStr.length > 5 ? 17 : 22;
+  ctx.font = `bold ${scoreFontSize}px ${FONT}`;
+  ctx.fillText(scoreStr, 20, 48);
 
   ctx.fillStyle = '#404040';
   ctx.font = `10px ${FONT}`;
   ctx.fillText(`BEST: ${highScore}`, 20, 66);
+  ctx.restore();
   ctx.restore();
 
   // Game over overlay
@@ -444,9 +467,9 @@ export function renderFrame(
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fillRect(0, 0, GAME_WIDTH, PLAY_AREA_HEIGHT);
 
-    const boxX = GAME_WIDTH / 2 - 165;
+    const boxW = GAME_WIDTH - 60;
+    const boxX = (GAME_WIDTH - boxW) / 2;
     const boxY = PLAY_AREA_HEIGHT / 2 - 100;
-    const boxW = 330;
     const boxH = 220;
 
     ctx.fillStyle = '#FFFFFF';
