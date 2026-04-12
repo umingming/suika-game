@@ -50,17 +50,26 @@ export default function GameApp() {
     setScreen('playing');
   }, []);
 
-  const handleNicknameChange = useCallback(async (newNickname: string) => {
-    setNickname(newNickname);
+  const handleNicknameChange = useCallback(async (newNickname: string): Promise<string | null> => {
     try {
-      await fetch('/api/nickname', {
+      const res = await fetch('/api/nickname', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname: newNickname }),
       });
+      if (res.status === 409) {
+        const data = await res.json();
+        return data.error || '이미 사용 중인 닉네임입니다.';
+      }
+      if (res.ok) {
+        setNickname(newNickname);
+        return null;
+      }
     } catch {
-      // Nickname update failed silently
+      // Network error — allow optimistic update
     }
+    setNickname(newNickname);
+    return null;
   }, []);
 
   if (screen === 'nickname') {

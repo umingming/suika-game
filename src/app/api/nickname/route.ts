@@ -53,7 +53,25 @@ export async function POST(request: NextRequest) {
     const redis = getRedis();
     if (!redis) return NextResponse.json({ nickname });
     const ip = getClientIp(request);
+
+    // Check if this nickname is already taken by a different IP
+    const ownerIp = await redis.get<string>(`nickowner:${nickname}`);
+    if (ownerIp && ownerIp !== ip) {
+      return NextResponse.json(
+        { error: '이미 사용 중인 닉네임입니다.' },
+        { status: 409 },
+      );
+    }
+
+    // Clean up old reverse-lookup if user is changing their nickname
+    const oldNickname = await redis.get<string>(`nickname:${ip}`);
+    if (oldNickname && oldNickname !== nickname) {
+      await redis.del(`nickowner:${oldNickname}`);
+    }
+
+    // Save nickname and reverse-lookup
     await redis.set(`nickname:${ip}`, nickname);
+    await redis.set(`nickowner:${nickname}`, ip);
 
     return NextResponse.json({ nickname });
   } catch {

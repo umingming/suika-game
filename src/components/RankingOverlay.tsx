@@ -12,7 +12,7 @@ interface RankingOverlayProps {
   score: number;
   nickname: string;
   onRestart: () => void;
-  onNicknameChange: (nickname: string) => void;
+  onNicknameChange: (nickname: string) => Promise<string | null>;
 }
 
 export default function RankingOverlay({
@@ -25,6 +25,7 @@ export default function RankingOverlay({
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(nickname);
+  const [editError, setEditError] = useState('');
   const editRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,11 +49,16 @@ export default function RankingOverlay({
     }
   }, [editing]);
 
-  const handleEditSubmit = () => {
+  const handleEditSubmit = async () => {
     const trimmed = editValue.trim();
     if (trimmed.length >= 2 && trimmed.length <= 10 && /^[a-zA-Z0-9가-힣]+$/.test(trimmed)) {
-      onNicknameChange(trimmed);
-      setEditing(false);
+      setEditError('');
+      const error = await onNicknameChange(trimmed);
+      if (error) {
+        setEditError(error);
+      } else {
+        setEditing(false);
+      }
     }
   };
 
@@ -92,15 +98,18 @@ export default function RankingOverlay({
                       <td>{i + 1}</td>
                       <td>
                         {isMe && editing ? (
-                          <input
-                            ref={editRef}
-                            className="ranking-edit-input"
-                            value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
-                            onKeyDown={handleEditKeyDown}
-                            onBlur={handleEditSubmit}
-                            maxLength={10}
-                          />
+                          <>
+                            <input
+                              ref={editRef}
+                              className="ranking-edit-input"
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onKeyDown={handleEditKeyDown}
+                              onBlur={handleEditSubmit}
+                              maxLength={10}
+                            />
+                            {editError && <div className="nickname-error">{editError}</div>}
+                          </>
                         ) : (
                           <span
                             className={isMe ? 'ranking-nickname-me' : ''}

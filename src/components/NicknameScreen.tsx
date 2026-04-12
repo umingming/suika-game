@@ -51,17 +51,22 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
 
     // Await nickname save to Redis before starting game
     try {
-      await fetch('/api/nickname', {
+      const res = await fetch('/api/nickname', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname: trimmed }),
       });
+      if (res.status === 409) {
+        const data = await res.json();
+        setError(data.error || '이미 사용 중인 닉네임입니다.');
+        setSubmitting(false);
+        return;
+      }
     } catch {
       // Even if save fails, allow game start
-    } finally {
-      setSubmitting(false);
     }
 
+    setSubmitting(false);
     onStart(trimmed);
   };
 
