@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { nickname } = await request.json();
+    const { nickname, previousNickname } = await request.json();
 
     if (!nickname || typeof nickname !== 'string') {
       return NextResponse.json({ error: '닉네임을 입력해주세요.' }, { status: 400 });
@@ -57,6 +57,18 @@ export async function POST(request: NextRequest) {
     // Check if this nickname is already taken by a different IP
     const ownerIp = await redis.get<string>(`nickowner:${nickname}`);
     if (ownerIp && ownerIp !== ip) {
+      // If the client claims this was their previous nickname, verify and transfer ownership
+      if (previousNickname && previousNickname === nickname) {
+        // Transfer ownership to the new IP
+        const oldNicknameForNewIp = await redis.get<string>(`nickname:${ip}`);
+        if (oldNicknameForNewIp && oldNicknameForNewIp !== nickname) {
+          await redis.del(`nickowner:${oldNicknameForNewIp}`);
+        }
+        await redis.del(`nickname:${ownerIp}`);
+        await redis.set(`nickname:${ip}`, nickname);
+        await redis.set(`nickowner:${nickname}`, ip);
+        return NextResponse.json({ nickname });
+      }
       return NextResponse.json(
         { error: '이미 사용 중인 닉네임입니다.' },
         { status: 409 },

@@ -54,13 +54,19 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
       const res = await fetch('/api/nickname', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname: trimmed }),
+        body: JSON.stringify({ nickname: trimmed, previousNickname: localStorage.getItem('nickname') }),
       });
       if (res.status === 409) {
-        const data = await res.json();
-        setError(data.error || '이미 사용 중인 닉네임입니다.');
-        setSubmitting(false);
-        return;
+        // 로컬스토리지에 저장된 내 닉네임이면 그냥 허용
+        const savedNickname = localStorage.getItem('nickname');
+        if (savedNickname === trimmed) {
+          // 내 닉네임이므로 진행
+        } else {
+          const data = await res.json();
+          setError(data.error || '이미 사용 중인 닉네임입니다.');
+          setSubmitting(false);
+          return;
+        }
       }
     } catch {
       // Even if save fails, allow game start
