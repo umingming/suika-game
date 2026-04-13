@@ -41,8 +41,26 @@ export function setupCollisionHandler(
       // Skip if already merging
       if (bodyA.isMerging || bodyB.isMerging) continue;
 
-      // Skip if max level (watermelon)
-      if (bodyA.fruitLevel >= 10) continue;
+      // Max level: both disappear
+      if (bodyA.fruitLevel >= 10) {
+        bodyA.isMerging = true;
+        bodyB.isMerging = true;
+        removeFruitBody(engine, bodyA);
+        removeFruitBody(engine, bodyB);
+
+        const midX = (bodyA.position.x + bodyB.position.x) / 2;
+        const midY = (bodyA.position.y + bodyB.position.y) / 2;
+        callbacks.onScore(FRUITS[10].scoreValue * 2);
+        callbacks.onMergeEffect({
+          x: midX,
+          y: midY,
+          radius: 5,
+          maxRadius: FRUITS[10].radius * 2,
+          color: FRUITS[10].color,
+          alpha: 1.0,
+        });
+        continue;
+      }
 
       // Mark as merging to prevent double processing
       bodyA.isMerging = true;
