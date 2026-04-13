@@ -19,10 +19,8 @@ export function setupCollisionHandler(
   let gameOverCheckTimeout: ReturnType<typeof setTimeout> | null = null;
   // Track how long each fruit has been continuously above the danger line
   const dangerTimers = new Map<number, number>();
-  // Completely outside: game over after 2 consecutive checks (2 seconds)
+  // Entirely above the line: game over after 2 consecutive checks (2 seconds)
   const FULL_OUT_THRESHOLD = 2;
-  // Partially above: game over after 3 consecutive checks (3 seconds)
-  const PARTIAL_THRESHOLD = 3;
 
   const handler = (event: Matter.IEventCollision<Matter.Engine>) => {
     const pairs = event.pairs;
@@ -92,23 +90,14 @@ export function setupCollisionHandler(
 
       const radius = FRUITS[fb.fruitLevel].radius;
       const fruitBottom = fb.position.y + radius;
-      const fruitTop = fb.position.y - radius;
       const speed = Math.sqrt(fb.velocity.x ** 2 + fb.velocity.y ** 2);
 
       if (speed < 2) {
         if (fruitBottom < DANGER_LINE_Y) {
-          // Entire fruit is above the line — shorter tolerance
+          // Entire fruit is above the line — game over after consecutive checks
           const count = (dangerTimers.get(fb.id) ?? 0) + 1;
           dangerTimers.set(fb.id, count);
           if (count >= FULL_OUT_THRESHOLD) {
-            callbacks.onGameOver();
-            return;
-          }
-        } else if (fruitTop < DANGER_LINE_Y) {
-          // Partially above the line — longer tolerance
-          const count = (dangerTimers.get(fb.id) ?? 0) + 1;
-          dangerTimers.set(fb.id, count);
-          if (count >= PARTIAL_THRESHOLD) {
             callbacks.onGameOver();
             return;
           }
