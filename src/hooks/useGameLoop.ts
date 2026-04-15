@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 
 export function useGameLoop(callback: () => void) {
-  const callbackRef = useRef(callback);
-  callbackRef.current = callback;
+  const onFrame = useEffectEvent(callback);
 
   useEffect(() => {
     let animationId: number;
 
     const loop = () => {
-      callbackRef.current();
+      onFrame();
       animationId = requestAnimationFrame(loop);
     };
 

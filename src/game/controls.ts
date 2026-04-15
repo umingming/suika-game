@@ -1,4 +1,4 @@
-import { GAME_WIDTH, DROP_Y } from './constants';
+import { GAME_WIDTH } from './constants';
 import { FRUITS } from './fruits';
 
 export interface ControlCallbacks {

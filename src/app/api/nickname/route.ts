@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
+import {
+  ensurePlayer,
+  getClientId,
+  getClientIp,
+  getNicknameOwner,
+  updatePlayerNickname,
+} from '@/lib/leaderboard';
 
 function getRedis(): Redis | null {
   try {
@@ -7,14 +14,6 @@ function getRedis(): Redis | null {
   } catch {
     return null;
   }
-}
-
-function getClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  return '127.0.0.1';
 }
 
 function isValidNickname(nickname: string): boolean {
@@ -27,9 +26,11 @@ export async function GET(request: NextRequest) {
   try {
     const redis = getRedis();
     if (!redis) return NextResponse.json({ nickname: null });
+    const clientId = getClientId(request);
+    if (!clientId) return NextResponse.json({ nickname: null });
     const ip = getClientIp(request);
-    const nickname = await redis.get<string>(`nickname:${ip}`);
-    return NextResponse.json({ nickname: nickname ?? null });
+    const player = await ensurePlayer(redis, clientId, ip);
+    return NextResponse.json({ nickname: player.nickname || null });
   } catch {
     return NextResponse.json({ nickname: null });
   }
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { nickname, previousNickname } = await request.json();
+    const { nickname } = await request.json();
 
     if (!nickname || typeof nickname !== 'string') {
       return NextResponse.json({ error: '닉네임을 입력해주세요.' }, { status: 400 });
@@ -51,41 +52,29 @@ export async function POST(request: NextRequest) {
     }
 
     const redis = getRedis();
-    if (!redis) return NextResponse.json({ nickname });
-    const ip = getClientIp(request);
+    if (!redis) {
+      return NextResponse.json({ error: '서버에 연결할 수 없습니다.' }, { status: 503 });
+    }
 
-    // Check if this nickname is already taken by a different IP
-    const ownerIp = await redis.get<string>(`nickowner:${nickname}`);
-    if (ownerIp && ownerIp !== ip) {
-      // If the client claims this was their previous nickname, verify and transfer ownership
-      if (previousNickname && previousNickname === nickname) {
-        // Transfer ownership to the new IP
-        const oldNicknameForNewIp = await redis.get<string>(`nickname:${ip}`);
-        if (oldNicknameForNewIp && oldNicknameForNewIp !== nickname) {
-          await redis.del(`nickowner:${oldNicknameForNewIp}`);
-        }
-        await redis.del(`nickname:${ownerIp}`);
-        await redis.set(`nickname:${ip}`, nickname);
-        await redis.set(`nickowner:${nickname}`, ip);
-        return NextResponse.json({ nickname });
-      }
+    const clientId = getClientId(request);
+    if (!clientId) {
+      return NextResponse.json({ error: '사용자 식별 정보가 없습니다.' }, { status: 400 });
+    }
+
+    const ip = getClientIp(request);
+    const player = await ensurePlayer(redis, clientId, ip);
+
+    const ownerClientId = await getNicknameOwner(redis, nickname);
+    if (ownerClientId && ownerClientId !== clientId) {
       return NextResponse.json(
         { error: '이미 사용 중인 닉네임입니다.' },
         { status: 409 },
       );
     }
 
-    // Clean up old reverse-lookup if user is changing their nickname
-    const oldNickname = await redis.get<string>(`nickname:${ip}`);
-    if (oldNickname && oldNickname !== nickname) {
-      await redis.del(`nickowner:${oldNickname}`);
-    }
+    const updatedPlayer = await updatePlayerNickname(redis, player, nickname);
 
-    // Save nickname and reverse-lookup
-    await redis.set(`nickname:${ip}`, nickname);
-    await redis.set(`nickowner:${nickname}`, ip);
-
-    return NextResponse.json({ nickname });
+    return NextResponse.json({ nickname: updatedPlayer.nickname });
   } catch {
     return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
   }

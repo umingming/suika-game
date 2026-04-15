@@ -29,10 +29,9 @@ interface GameCanvasProps {
 export default function GameCanvas({ onGameOver: onGameOverProp, isOverlayActive }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { engineRef, runnerRef } = useGameEngine();
+  const { engineRef } = useGameEngine();
   const scale = useResponsive(containerRef);
   const scaleRef = useRef(scale);
-  scaleRef.current = scale;
 
   const [highScore, setHighScore] = useLocalStorage('suika-high-score', 0);
 
@@ -43,23 +42,6 @@ export default function GameCanvas({ onGameOver: onGameOverProp, isOverlayActive
   const collisionCleanupRef = useRef<(() => void) | null>(null);
   const controlsCleanupRef = useRef<(() => void) | null>(null);
   const [, forceRender] = useState(0);
-
-  const resetGame = useCallback(() => {
-    const engine = engineRef.current;
-    if (!engine) return;
-
-    // Remove all non-static bodies
-    const bodies = Matter.Composite.allBodies(engine.world);
-    const toRemove = bodies.filter(b => !b.isStatic);
-    Matter.Composite.remove(engine.world, toRemove);
-
-    // Reset state
-    gameStateRef.current = createInitialState();
-    dropXRef.current = GAME_WIDTH / 2;
-    effectsRef.current = [];
-    lastDropTimeRef.current = 0;
-    forceRender(n => n + 1);
-  }, [engineRef]);
 
   const handleDrop = useCallback((x: number) => {
     const engine = engineRef.current;
@@ -97,6 +79,10 @@ export default function GameCanvas({ onGameOver: onGameOverProp, isOverlayActive
   useEffect(() => {
     preloadPlayerImages();
   }, []);
+
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
 
   // Setup collision handler
   useEffect(() => {

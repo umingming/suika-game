@@ -13,7 +13,7 @@ interface RankingOverlayProps {
   nickname: string;
   onRestart: () => void;
   onNicknameChange: (nickname: string) => Promise<string | null>;
-  onSubmitScore: (score: number) => Promise<boolean>;
+  onSubmitScore: (score: number) => Promise<{ ok: boolean; error?: string }>;
 }
 
 export default function RankingOverlay({
@@ -28,7 +28,7 @@ export default function RankingOverlay({
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(nickname);
   const [editError, setEditError] = useState('');
-  const [submitFailed, setSubmitFailed] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [retrying, setRetrying] = useState(false);
   const editRef = useRef<HTMLInputElement>(null);
 
@@ -44,16 +44,16 @@ export default function RankingOverlay({
 
   const retrySubmit = async () => {
     setRetrying(true);
-    const ok = await onSubmitScore(score);
-    setSubmitFailed(!ok);
+    const result = await onSubmitScore(score);
+    setSubmitError(result.ok ? '' : (result.error || '점수 등록에 실패했습니다.'));
     await fetchRankings();
     setRetrying(false);
   };
 
   useEffect(() => {
     (async () => {
-      const ok = await onSubmitScore(score);
-      setSubmitFailed(!ok);
+      const result = await onSubmitScore(score);
+      setSubmitError(result.ok ? '' : (result.error || '점수 등록에 실패했습니다.'));
       await fetchRankings();
       setLoading(false);
     })();
@@ -76,6 +76,7 @@ export default function RankingOverlay({
         setEditError(error);
       } else {
         setEditing(false);
+        await fetchRankings();
       }
     }
   };
@@ -94,9 +95,9 @@ export default function RankingOverlay({
         <h2 className="ranking-title">게임 오버</h2>
         <div className="ranking-score">점수: {score}</div>
 
-        {submitFailed && (
+        {submitError && (
           <div className="ranking-submit-error">
-            점수 등록에 실패했습니다.
+            {submitError}
             <button className="ranking-retry-btn" onClick={retrySubmit} disabled={retrying}>
               {retrying ? '재시도 중...' : '다시 시도'}
             </button>

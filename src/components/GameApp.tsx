@@ -1,38 +1,49 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import NicknameScreen from './NicknameScreen';
 import RankingOverlay from './RankingOverlay';
 import GameCanvas from './GameCanvas';
+import { getClientHeaders } from '@/lib/clientId';
 
 type Screen = 'nickname' | 'playing' | 'gameover';
+type SubmitScoreResult = {
+  ok: boolean;
+  error?: string;
+};
 
 export default function GameApp() {
   const [screen, setScreen] = useState<Screen>('nickname');
   const [nickname, setNickname] = useState('');
   const [finalScore, setFinalScore] = useState(0);
   const [gameKey, setGameKey] = useState(0);
-  const nicknameRef = useRef(nickname);
-  nicknameRef.current = nickname;
 
   // Submit score to server with 1 retry, returns true on success
-  const submitScore = useCallback(async (score: number): Promise<boolean> => {
+  const submitScore = useCallback(async (score: number): Promise<SubmitScoreResult> => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch('/api/scores', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getClientHeaders(),
           body: JSON.stringify({ score }),
         });
-        if (res.ok) return true;
-        console.error(`Score submit attempt ${attempt + 1} failed:`, res.status, await res.text());
+        if (res.ok) return { ok: true };
+
+        const data = await res.json().catch(() => null);
+        const error = data?.error || '점수를 저장하지 못했습니다.';
+        console.error(`Score submit attempt ${attempt + 1} failed:`, res.status, error);
+
+        if (res.status < 500) {
+          return { ok: false, error };
+        }
       } catch (err) {
         console.error(`Score submit attempt ${attempt + 1} error:`, err);
       }
       // Wait briefly before retry
       if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
     }
-    return false;
+
+    return { ok: false, error: '점수 저장 중 네트워크 문제가 발생했습니다.' };
   }, []);
 
   const handleStart = useCallback((name: string) => {
@@ -54,22 +65,23 @@ export default function GameApp() {
     try {
       const res = await fetch('/api/nickname', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getClientHeaders(),
         body: JSON.stringify({ nickname: newNickname }),
       });
-      if (res.status === 409) {
-        const data = await res.json();
-        return data.error || '이미 사용 중인 닉네임입니다.';
-      }
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) return data?.error || '닉네임을 변경하지 못했습니다.';
+
       if (res.ok) {
         setNickname(newNickname);
+        localStorage.setItem('nickname', newNickname);
         return null;
       }
     } catch {
-      // Network error — allow optimistic update
+      return '닉네임 변경 중 네트워크 문제가 발생했습니다.';
     }
-    setNickname(newNickname);
-    return null;
+
+    return '닉네임을 변경하지 못했습니다.';
   }, []);
 
   if (screen === 'nickname') {

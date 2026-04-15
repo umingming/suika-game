@@ -8,7 +8,6 @@ const FONT = "'Jua', sans-serif";
 // ── Player image preloading ──
 
 const playerImages: Map<number, HTMLImageElement> = new Map();
-let imagesLoaded = false;
 
 export function preloadPlayerImages(): Promise<void> {
   return new Promise((resolve) => {
@@ -21,7 +20,6 @@ export function preloadPlayerImages(): Promise<void> {
         playerImages.set(i, img);
         loaded++;
         if (loaded === total) {
-          imagesLoaded = true;
           resolve();
         }
       };
@@ -29,7 +27,6 @@ export function preloadPlayerImages(): Promise<void> {
         // Image failed to load — fallback will be used
         loaded++;
         if (loaded === total) {
-          imagesLoaded = true;
           resolve();
         }
       };
@@ -235,8 +232,7 @@ export function drawMergeEffects(
 
 function drawCuteBox(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number,
-  _radius = 0
+  x: number, y: number, w: number, h: number
 ): void {
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(x, y, w, h);

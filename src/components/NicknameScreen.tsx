@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { getClientHeaders } from '@/lib/clientId';
 
 interface RankingEntry {
   nickname: string;
@@ -32,6 +33,7 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
 
   const handleSubmit = async () => {
     const trimmed = nickname.trim();
+    const previousNickname = localStorage.getItem('nickname') ?? '';
 
     if (trimmed.length < 2 || trimmed.length > 10) {
       setError('닉네임은 2~10자로 입력해주세요.');
@@ -46,27 +48,18 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
     setError('');
     setSubmitting(true);
 
-    // Save to localStorage for instant recall next time
-    localStorage.setItem('nickname', trimmed);
-
     // Await nickname save to Redis before starting game
     try {
       const res = await fetch('/api/nickname', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname: trimmed, previousNickname: localStorage.getItem('nickname') }),
+        headers: getClientHeaders(),
+        body: JSON.stringify({ nickname: trimmed, previousNickname }),
       });
-      if (res.status === 409) {
-        // 로컬스토리지에 저장된 내 닉네임이면 그냥 허용
-        const savedNickname = localStorage.getItem('nickname');
-        if (savedNickname === trimmed) {
-          // 내 닉네임이므로 진행
-        } else {
-          const data = await res.json();
-          setError(data.error || '이미 사용 중인 닉네임입니다.');
-          setSubmitting(false);
-          return;
-        }
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || '닉네임 저장에 실패했습니다.');
+        setSubmitting(false);
+        return;
       }
     } catch {
       setError('서버 연결에 실패했습니다. 다시 시도해주세요.');
@@ -74,6 +67,7 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
       return;
     }
 
+    localStorage.setItem('nickname', trimmed);
     setSubmitting(false);
     onStart(trimmed);
   };
