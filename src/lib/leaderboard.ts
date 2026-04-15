@@ -299,8 +299,8 @@ export async function recordScore(
   };
 }
 
-export async function getLeaderboardEntries(redis: Redis): Promise<LeaderboardEntry[]> {
-  const currentEntries = await readSortedSet(redis, LEADERBOARD_KEY, 10);
+export async function getLeaderboardEntries(redis: Redis, limit = 10): Promise<LeaderboardEntry[]> {
+  const currentEntries = await readSortedSet(redis, LEADERBOARD_KEY, limit);
   const entries: LeaderboardEntry[] = [];
 
   for (const entry of currentEntries) {
@@ -315,7 +315,7 @@ export async function getLeaderboardEntries(redis: Redis): Promise<LeaderboardEn
     });
   }
 
-  const legacyEntries = await readSortedSet(redis, LEGACY_LEADERBOARD_KEY, 10);
+  const legacyEntries = await readSortedSet(redis, LEGACY_LEADERBOARD_KEY, limit);
   for (const entry of legacyEntries) {
     const parsed = parseLegacyMember(entry.member);
     if (!parsed) continue;
@@ -331,5 +331,5 @@ export async function getLeaderboardEntries(redis: Redis): Promise<LeaderboardEn
   }
 
   entries.sort((a, b) => b.score - a.score);
-  return entries.slice(0, 10);
+  return entries.slice(0, limit);
 }

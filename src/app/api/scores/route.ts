@@ -16,11 +16,15 @@ function getRedis(): Redis | null {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const redis = getRedis();
     if (!redis) return NextResponse.json({ entries: [] });
-    const entries = await getLeaderboardEntries(redis);
+
+    const limitParam = new URL(request.url).searchParams.get('limit');
+    const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 10, 1), 500) : 10;
+
+    const entries = await getLeaderboardEntries(redis, limit);
     return NextResponse.json({ entries });
   } catch {
     return NextResponse.json({ entries: [] });
