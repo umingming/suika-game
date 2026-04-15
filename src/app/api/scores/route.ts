@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     const redis = getRedis();
-    if (!redis) return NextResponse.json({ updated: false, bestScore: 0 });
+    if (!redis) return NextResponse.json({ error: '서버에 연결할 수 없습니다.' }, { status: 503 });
     const ip = getClientIp(request);
     const nickname = await redis.get<string>(`nickname:${ip}`);
 

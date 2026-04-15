@@ -289,3 +289,28 @@ html, body {
 .ranking-btn:active {
   transform: scale(0.98);
 }
+
+.ranking-submit-error {
+  font-family: 'Jua', sans-serif;
+  font-size: 13px;
+  color: #FF3855;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.ranking-retry-btn {
+  font-family: 'Jua', sans-serif;
+  font-size: 12px;
+  margin-left: 8px;
+  padding: 4px 12px;
+  background: #8B1A4A;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ranking-retry-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -13,7 +13,7 @@ interface RankingOverlayProps {
   nickname: string;
   onRestart: () => void;
   onNicknameChange: (nickname: string) => Promise<string | null>;
-  onSubmitScore: (score: number) => Promise<void>;
+  onSubmitScore: (score: number) => Promise<boolean>;
 }
 
 export default function RankingOverlay({
@@ -28,24 +28,34 @@ export default function RankingOverlay({
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(nickname);
   const [editError, setEditError] = useState('');
+  const [submitFailed, setSubmitFailed] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const editRef = useRef<HTMLInputElement>(null);
+
+  const fetchRankings = async () => {
+    try {
+      const res = await fetch('/api/scores');
+      const data = await res.json();
+      setEntries(data.entries ?? []);
+    } catch {
+      setEntries([]);
+    }
+  };
+
+  const retrySubmit = async () => {
+    setRetrying(true);
+    const ok = await onSubmitScore(score);
+    setSubmitFailed(!ok);
+    await fetchRankings();
+    setRetrying(false);
+  };
 
   useEffect(() => {
     (async () => {
-      try {
-        await onSubmitScore(score);
-      } catch {
-        // Score submission failed — still show rankings
-      }
-      try {
-        const res = await fetch('/api/scores');
-        const data = await res.json();
-        setEntries(data.entries ?? []);
-      } catch {
-        setEntries([]);
-      } finally {
-        setLoading(false);
-      }
+      const ok = await onSubmitScore(score);
+      setSubmitFailed(!ok);
+      await fetchRankings();
+      setLoading(false);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -83,6 +93,15 @@ export default function RankingOverlay({
       <div className="ranking-box">
         <h2 className="ranking-title">게임 오버</h2>
         <div className="ranking-score">점수: {score}</div>
+
+        {submitFailed && (
+          <div className="ranking-submit-error">
+            점수 등록에 실패했습니다.
+            <button className="ranking-retry-btn" onClick={retrySubmit} disabled={retrying}>
+              {retrying ? '재시도 중...' : '다시 시도'}
+            </button>
+          </div>
+        )}
 
         <div className="ranking-table-wrap">
           {loading ? (

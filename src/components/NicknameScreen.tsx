@@ -69,7 +69,9 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
         }
       }
     } catch {
-      // Even if save fails, allow game start
+      setError('서버 연결에 실패했습니다. 다시 시도해주세요.');
+      setSubmitting(false);
+      return;
     }
 
     setSubmitting(false);

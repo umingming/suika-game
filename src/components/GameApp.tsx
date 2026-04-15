@@ -15,8 +15,8 @@ export default function GameApp() {
   const nicknameRef = useRef(nickname);
   nicknameRef.current = nickname;
 
-  // Submit score to server with 1 retry
-  const submitScore = useCallback(async (score: number) => {
+  // Submit score to server with 1 retry, returns true on success
+  const submitScore = useCallback(async (score: number): Promise<boolean> => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch('/api/scores', {
@@ -24,7 +24,7 @@ export default function GameApp() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ score }),
         });
-        if (res.ok) return;
+        if (res.ok) return true;
         console.error(`Score submit attempt ${attempt + 1} failed:`, res.status, await res.text());
       } catch (err) {
         console.error(`Score submit attempt ${attempt + 1} error:`, err);
@@ -32,6 +32,7 @@ export default function GameApp() {
       // Wait briefly before retry
       if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
     }
+    return false;
   }, []);
 
   const handleStart = useCallback((name: string) => {
