@@ -101,9 +101,11 @@ function maskIp(ip: string): string {
 async function readSortedSet(
   redis: Redis,
   key: string,
+  start = 0,
   limit = 10,
 ): Promise<Array<{ member: string; score: number }>> {
-  const results = await redis.zrange(key, 0, limit - 1, { rev: true, withScores: true });
+  const stop = start + limit - 1;
+  const results = await redis.zrange(key, start, stop, { rev: true, withScores: true });
 
   if (
     results.length > 0 &&
@@ -275,59 +277,92 @@ export async function recordScore(
   player: PlayerRecord,
   score: number,
 ): Promise<{ updated: boolean; bestScore: number; player: PlayerRecord }> {
-  if (score <= player.bestScore) {
-    return {
-      updated: false,
-      bestScore: player.bestScore,
-      player,
-    };
+  const updated = score > player.bestScore;
+  const bestScore = updated ? score : player.bestScore;
+
+  const nextPlayer = updated
+    ? {
+        ...player,
+        bestScore: score,
+        updatedAt: nowIso(),
+      }
+    : player;
+
+  if (updated) {
+    await savePlayer(redis, nextPlayer);
   }
 
-  const updatedPlayer: PlayerRecord = {
-    ...player,
-    bestScore: score,
-    updatedAt: nowIso(),
-  };
-
-  await savePlayer(redis, updatedPlayer);
-  await redis.zadd(LEADERBOARD_KEY, { score, member: player.clientId });
+  // Keep the sorted set in sync even when the submitted score is not a new record.
+  // This makes score submission idempotent and repairs missing leaderboard entries.
+  if (bestScore > 0) {
+    await redis.zadd(LEADERBOARD_KEY, { score: bestScore, member: player.clientId });
+  }
 
   return {
-    updated: true,
-    bestScore: score,
-    player: updatedPlayer,
+    updated,
+    bestScore,
+    player: nextPlayer,
   };
 }
 
 export async function getLeaderboardEntries(redis: Redis, limit = 10): Promise<LeaderboardEntry[]> {
-  const currentEntries = await readSortedSet(redis, LEADERBOARD_KEY, limit);
   const entries: LeaderboardEntry[] = [];
+  const seenClientIds = new Set<string>();
+  const seenLegacyMembers = new Set<string>();
+  const batchSize = Math.max(limit * 3, 30);
 
-  for (const entry of currentEntries) {
-    const player = await loadPlayer(redis, entry.member);
-    if (!player || !player.nickname) continue;
+  let currentOffset = 0;
+  while (entries.length < limit) {
+    const currentEntries = await readSortedSet(redis, LEADERBOARD_KEY, currentOffset, batchSize);
+    if (currentEntries.length === 0) break;
 
-    entries.push({
-      nickname: player.nickname,
-      score: entry.score,
-      ip: maskIp(player.lastSeenIp),
-      clientId: player.clientId,
-    });
+    for (const entry of currentEntries) {
+      if (seenClientIds.has(entry.member)) continue;
+      seenClientIds.add(entry.member);
+
+      const player = await loadPlayer(redis, entry.member);
+      if (!player || !player.nickname) continue;
+
+      entries.push({
+        nickname: player.nickname,
+        score: entry.score,
+        ip: maskIp(player.lastSeenIp),
+        clientId: player.clientId,
+      });
+
+      if (entries.length >= limit) break;
+    }
+
+    if (currentEntries.length < batchSize) break;
+    currentOffset += batchSize;
   }
 
-  const legacyEntries = await readSortedSet(redis, LEGACY_LEADERBOARD_KEY, limit);
-  for (const entry of legacyEntries) {
-    const parsed = parseLegacyMember(entry.member);
-    if (!parsed) continue;
+  let legacyOffset = 0;
+  while (entries.length < limit) {
+    const legacyEntries = await readSortedSet(redis, LEGACY_LEADERBOARD_KEY, legacyOffset, batchSize);
+    if (legacyEntries.length === 0) break;
 
-    const migrated = await redis.get<string>(legacyMigratedKey(parsed.ip));
-    if (migrated) continue;
+    for (const entry of legacyEntries) {
+      if (seenLegacyMembers.has(entry.member)) continue;
+      seenLegacyMembers.add(entry.member);
 
-    entries.push({
-      nickname: parsed.nickname,
-      score: entry.score,
-      ip: maskIp(parsed.ip),
-    });
+      const parsed = parseLegacyMember(entry.member);
+      if (!parsed) continue;
+
+      const migrated = await redis.get<string>(legacyMigratedKey(parsed.ip));
+      if (migrated) continue;
+
+      entries.push({
+        nickname: parsed.nickname,
+        score: entry.score,
+        ip: maskIp(parsed.ip),
+      });
+
+      if (entries.length >= limit) break;
+    }
+
+    if (legacyEntries.length < batchSize) break;
+    legacyOffset += batchSize;
   }
 
   entries.sort((a, b) => b.score - a.score);
