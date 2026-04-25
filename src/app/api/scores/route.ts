@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 import {
+  GAME_SESSION_COOKIE,
+  getGameDurationMs,
+  loadGameSession,
+  MIN_GAME_DURATION_MS,
+  saveGameSession,
+} from '@/lib/gameSession';
+import {
   ensurePlayer,
   getClientId,
   getClientIp,
@@ -49,12 +56,47 @@ export async function POST(request: NextRequest) {
 
     const ip = getClientIp(request);
     const player = await ensurePlayer(redis, clientId, ip);
+    const sessionId = request.cookies.get(GAME_SESSION_COOKIE)?.value;
+
+    if (!sessionId) {
+      return NextResponse.json({ error: '게임 세션이 없습니다. 새 게임을 시작해주세요.' }, { status: 400 });
+    }
+
+    const session = await loadGameSession(redis, sessionId);
+    if (!session || session.clientId !== clientId) {
+      return NextResponse.json({ error: '유효하지 않은 게임 세션입니다. 다시 시작해주세요.' }, { status: 400 });
+    }
 
     if (!player.nickname) {
       return NextResponse.json({ error: '닉네임을 먼저 설정해주세요.' }, { status: 400 });
     }
 
+    if (session.submittedAt) {
+      if (session.submittedScore === score) {
+        const result = await recordScore(redis, player, score);
+        return NextResponse.json({
+          updated: result.updated,
+          bestScore: result.bestScore,
+          alreadySubmitted: true,
+        });
+      }
+
+      return NextResponse.json({ error: '이미 점수가 제출된 게임입니다.' }, { status: 409 });
+    }
+
+    if (getGameDurationMs(session) < MIN_GAME_DURATION_MS) {
+      return NextResponse.json(
+        { error: '게임 시간이 너무 짧아 점수를 등록할 수 없습니다. 다시 시도해주세요.' },
+        { status: 400 },
+      );
+    }
+
     const result = await recordScore(redis, player, score);
+    await saveGameSession(redis, {
+      ...session,
+      submittedAt: new Date().toISOString(),
+      submittedScore: score,
+    });
 
     return NextResponse.json({ updated: result.updated, bestScore: result.bestScore });
   } catch {

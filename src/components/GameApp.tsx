@@ -10,6 +10,9 @@ type Screen = 'nickname' | 'playing' | 'gameover';
 type SubmitScoreResult = {
   ok: boolean;
   error?: string;
+  updated?: boolean;
+  bestScore?: number;
+  alreadySubmitted?: boolean;
 };
 
 export default function GameApp() {
@@ -17,6 +20,39 @@ export default function GameApp() {
   const [nickname, setNickname] = useState('');
   const [finalScore, setFinalScore] = useState(0);
   const [gameKey, setGameKey] = useState(0);
+  const [preparingGame, setPreparingGame] = useState(false);
+
+  const initializeGameSession = useCallback(async (): Promise<string | null> => {
+    setPreparingGame(true);
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch('/api/game-session', {
+          method: 'POST',
+          headers: getClientHeaders(),
+        });
+
+        const data = await res.json().catch(() => null);
+        if (res.ok) {
+          setPreparingGame(false);
+          return null;
+        }
+
+        const error = data?.error || '게임 준비에 실패했습니다.';
+        if (res.status < 500) {
+          setPreparingGame(false);
+          return error;
+        }
+      } catch {
+        // Retry once on transient network errors.
+      }
+
+      if (attempt === 0) await new Promise(r => setTimeout(r, 700));
+    }
+
+    setPreparingGame(false);
+    return '게임 준비 중 네트워크 문제가 발생했습니다.';
+  }, []);
 
   // Submit score to server with 1 retry, returns true on success
   const submitScore = useCallback(async (score: number): Promise<SubmitScoreResult> => {
@@ -27,9 +63,16 @@ export default function GameApp() {
           headers: getClientHeaders(),
           body: JSON.stringify({ score }),
         });
-        if (res.ok) return { ok: true };
-
         const data = await res.json().catch(() => null);
+        if (res.ok) {
+          return {
+            ok: true,
+            updated: data?.updated,
+            bestScore: data?.bestScore,
+            alreadySubmitted: data?.alreadySubmitted,
+          };
+        }
+
         const error = data?.error || '점수를 저장하지 못했습니다.';
         console.error(`Score submit attempt ${attempt + 1} failed:`, res.status, error);
 
@@ -46,20 +89,28 @@ export default function GameApp() {
     return { ok: false, error: '점수 저장 중 네트워크 문제가 발생했습니다.' };
   }, []);
 
-  const handleStart = useCallback((name: string) => {
+  const handleStart = useCallback(async (name: string): Promise<string | null> => {
+    const error = await initializeGameSession();
+    if (error) return error;
+
     setNickname(name);
     setScreen('playing');
-  }, []);
+    return null;
+  }, [initializeGameSession]);
 
   const handleGameOver = useCallback((score: number) => {
     setFinalScore(score);
     setScreen('gameover');
   }, []);
 
-  const handleRestart = useCallback(() => {
+  const handleRestart = useCallback(async (): Promise<string | null> => {
+    const error = await initializeGameSession();
+    if (error) return error;
+
     setGameKey(k => k + 1);
     setScreen('playing');
-  }, []);
+    return null;
+  }, [initializeGameSession]);
 
   const handleNicknameChange = useCallback(async (newNickname: string): Promise<string | null> => {
     try {
@@ -85,7 +136,7 @@ export default function GameApp() {
   }, []);
 
   if (screen === 'nickname') {
-    return <NicknameScreen onStart={handleStart} />;
+    return <NicknameScreen onStart={handleStart} preparingGame={preparingGame} />;
   }
 
   return (
@@ -102,6 +153,7 @@ export default function GameApp() {
           onRestart={handleRestart}
           onNicknameChange={handleNicknameChange}
           onSubmitScore={submitScore}
+          preparingGame={preparingGame}
         />
       )}
     </div>

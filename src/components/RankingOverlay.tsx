@@ -1,19 +1,28 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { getOrCreateClientId } from '@/lib/clientId';
 
 interface RankingEntry {
   nickname: string;
   score: number;
   ip: string;
+  clientId?: string;
 }
 
 interface RankingOverlayProps {
   score: number;
   nickname: string;
-  onRestart: () => void;
+  onRestart: () => Promise<string | null>;
   onNicknameChange: (nickname: string) => Promise<string | null>;
-  onSubmitScore: (score: number) => Promise<{ ok: boolean; error?: string }>;
+  onSubmitScore: (score: number) => Promise<{
+    ok: boolean;
+    error?: string;
+    updated?: boolean;
+    bestScore?: number;
+    alreadySubmitted?: boolean;
+  }>;
+  preparingGame: boolean;
 }
 
 export default function RankingOverlay({
@@ -22,6 +31,7 @@ export default function RankingOverlay({
   onRestart,
   onNicknameChange,
   onSubmitScore,
+  preparingGame,
 }: RankingOverlayProps) {
   const [entries, setEntries] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,8 +39,15 @@ export default function RankingOverlay({
   const [editValue, setEditValue] = useState(nickname);
   const [editError, setEditError] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [submitStatus, setSubmitStatus] = useState('');
   const [retrying, setRetrying] = useState(false);
+  const [restartError, setRestartError] = useState('');
   const editRef = useRef<HTMLInputElement>(null);
+  const clientIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    clientIdRef.current = getOrCreateClientId();
+  }, []);
 
   const fetchRankings = async () => {
     try {
@@ -44,16 +61,36 @@ export default function RankingOverlay({
 
   const retrySubmit = async () => {
     setRetrying(true);
+    setSubmitStatus('점수를 다시 등록하는 중...');
     const result = await onSubmitScore(score);
     setSubmitError(result.ok ? '' : (result.error || '점수 등록에 실패했습니다.'));
+    if (result.ok) {
+      setSubmitStatus(
+        result.updated
+          ? `최고 점수 ${result.bestScore ?? score}점으로 등록되었습니다.`
+          : `기존 최고 점수 ${result.bestScore ?? score}점을 유지했습니다.`,
+      );
+    } else {
+      setSubmitStatus('');
+    }
     await fetchRankings();
     setRetrying(false);
   };
 
   useEffect(() => {
     (async () => {
+      setSubmitStatus('점수를 등록하는 중...');
       const result = await onSubmitScore(score);
       setSubmitError(result.ok ? '' : (result.error || '점수 등록에 실패했습니다.'));
+      if (result.ok) {
+        setSubmitStatus(
+          result.updated
+            ? `최고 점수 ${result.bestScore ?? score}점으로 등록되었습니다.`
+            : `기존 최고 점수 ${result.bestScore ?? score}점을 유지했습니다.`,
+        );
+      } else {
+        setSubmitStatus('');
+      }
       await fetchRankings();
       setLoading(false);
     })();
@@ -81,6 +118,14 @@ export default function RankingOverlay({
     }
   };
 
+  const handleRestartClick = async () => {
+    setRestartError('');
+    const error = await onRestart();
+    if (error) {
+      setRestartError(error);
+    }
+  };
+
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleEditSubmit();
     if (e.key === 'Escape') {
@@ -103,6 +148,9 @@ export default function RankingOverlay({
             </button>
           </div>
         )}
+        {!submitError && submitStatus && (
+          <div className="ranking-loading">{submitStatus}</div>
+        )}
 
         <div className="ranking-table-wrap">
           {loading ? (
@@ -120,7 +168,7 @@ export default function RankingOverlay({
               </thead>
               <tbody>
                 {entries.map((entry, i) => {
-                  const isMe = entry.nickname === nickname;
+                  const isMe = Boolean(entry.clientId && entry.clientId === clientIdRef.current);
                   return (
                     <tr key={i} className={isMe ? 'ranking-me' : ''}>
                       <td>{i + 1}</td>
@@ -162,8 +210,9 @@ export default function RankingOverlay({
           )}
         </div>
 
-        <button className="ranking-btn" onClick={onRestart}>
-          다시 하기
+        {restartError && <div className="nickname-error">{restartError}</div>}
+        <button className="ranking-btn" onClick={handleRestartClick} disabled={preparingGame}>
+          {preparingGame ? '준비 중...' : '다시 하기'}
         </button>
       </div>
     </div>

@@ -10,10 +10,11 @@ interface RankingEntry {
 }
 
 interface NicknameScreenProps {
-  onStart: (nickname: string) => void;
+  onStart: (nickname: string) => Promise<string | null>;
+  preparingGame: boolean;
 }
 
-export default function NicknameScreen({ onStart }: NicknameScreenProps) {
+export default function NicknameScreen({ onStart, preparingGame }: NicknameScreenProps) {
   const [nickname, setNickname] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('nickname') ?? '';
@@ -69,7 +70,11 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
 
     localStorage.setItem('nickname', trimmed);
     setSubmitting(false);
-    onStart(trimmed);
+    const startError = await onStart(trimmed);
+    if (startError) {
+      setError(startError);
+      return;
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -114,9 +119,9 @@ export default function NicknameScreen({ onStart }: NicknameScreenProps) {
           <button
             className="nickname-btn"
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || preparingGame}
           >
-            {submitting ? '접속 중...' : '시작하기'}
+            {submitting || preparingGame ? '접속 중...' : '시작하기'}
           </button>
           <button
             className="nickname-btn nickname-btn-ranking"
