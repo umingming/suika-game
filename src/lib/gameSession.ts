@@ -21,11 +21,13 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-function parseGameSession(raw: string | null): GameSessionRecord | null {
+function parseGameSession(raw: unknown): GameSessionRecord | null {
   if (!raw) return null;
 
   try {
-    const parsed = JSON.parse(raw) as Partial<GameSessionRecord>;
+    const parsed = typeof raw === 'string'
+      ? (JSON.parse(raw) as Partial<GameSessionRecord>)
+      : (raw as Partial<GameSessionRecord>);
     if (typeof parsed.sessionId !== 'string' || typeof parsed.clientId !== 'string') {
       return null;
     }

@@ -58,11 +58,13 @@ function serializePlayer(player: PlayerRecord): string {
   return JSON.stringify(player);
 }
 
-function parsePlayer(raw: string | null, clientId: string): PlayerRecord | null {
+function parsePlayer(raw: unknown, clientId: string): PlayerRecord | null {
   if (!raw) return null;
 
   try {
-    const parsed = JSON.parse(raw) as Partial<PlayerRecord>;
+    const parsed = typeof raw === 'string'
+      ? (JSON.parse(raw) as Partial<PlayerRecord>)
+      : (raw as Partial<PlayerRecord>);
     return {
       clientId,
       nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '',
